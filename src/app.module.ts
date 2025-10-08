@@ -2,14 +2,31 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { config } from './config/app.config';
+import { appConfig } from './config/app.config';
+import { jwtConfig } from './config/jwt.config';
+import { dbConfig } from './config/db.config';
+import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { IJwtConfig, IDbConfig } from './config/types';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [config],
-    })
+      load: [appConfig, jwtConfig, dbConfig],
+    }),
+    JwtModule.registerAsync({
+      global: true,
+      inject: [jwtConfig.KEY],
+      useFactory: (cfg: IJwtConfig) => ({
+        secret: cfg.secret,
+        signOptions: { expiresIn: cfg.expiresIn },
+      }),
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [dbConfig.KEY],
+      useFactory: (cfg: IDbConfig) => cfg,
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
