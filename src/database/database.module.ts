@@ -10,7 +10,9 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
       useFactory: async (
         configService: ConfigService,
       ): Promise<TypeOrmModuleOptions> => {
-        const dbUrl = configService.get<string>('DB_ADDRESS');
+        const dbUrl = await Promise.resolve(
+          configService.get<string>('DB_ADDRESS'),
+        );
 
         return {
           type: 'postgres',
