@@ -1,4 +1,4 @@
-import { ConfigType } from "@nestjs/config";
-import { config } from "./app.config";
+import { ConfigType } from '@nestjs/config';
+import { config } from './app.config';
 
-export type IConfig = ConfigType<typeof config>
+export type IConfig = ConfigType<typeof config>;

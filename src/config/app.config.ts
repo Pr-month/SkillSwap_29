@@ -1,4 +1,4 @@
-import { registerAs } from '@nestjs/config'
+import { registerAs } from '@nestjs/config';
 
 export const config = registerAs('APP_CONFIG', () => ({
   port: Number(process.env.PORT) || 3000,
@@ -10,4 +10,4 @@ export const config = registerAs('APP_CONFIG', () => ({
     database: process.env.DB_NAME || 'skillswap_29',
   },
   jwtSecret: process.env.JWT_SECRET || 'defaultsecret',
-}))
+}));
