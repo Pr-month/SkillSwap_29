@@ -1,17 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-
-import { DatabaseModule } from './database/database.module';
-
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
 import { appConfig } from './config/app.config';
 import { jwtConfig } from './config/jwt.config';
 import { dbConfig } from './config/db.config';
+import { IJwtConfig, IDbConfig } from './config/types';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { IJwtConfig, IDbConfig } from './config/types';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
