@@ -10,18 +10,29 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
       useFactory: async (
         configService: ConfigService,
       ): Promise<TypeOrmModuleOptions> => {
-        const dbUrl = await Promise.resolve(
-          configService.get<string>('DB_ADDRESS'),
-        );
+        const dbConfig = await Promise.resolve({
+          host: configService.get<string>('DB_HOST') || 'localhost',
+          port: configService.get<number>('DB_PORT') || 5432,
+          database: configService.get<string>('DB_NAME') || 'skillswap',
+          username: configService.get<string>('DB_USER') || 'postgres',
+          password: configService.get<string>('DB_PASSWORD') || 'postgres',
+        });
+
+        const isDevelopment =
+          configService.get<string>('NODE_ENV') !== 'production';
 
         return {
           type: 'postgres',
-          url: dbUrl,
-          entities: [],
+          host: dbConfig.host,
+          port: dbConfig.port,
+          database: dbConfig.database,
+          username: dbConfig.username,
+          password: dbConfig.password,
+          entities: [__dirname + '/../**/*.entity{.ts,.js}'],
           migrations: ['dist/migration/**/*{.js,.ts}'],
-          synchronize: false,
-          retryAttempts: 5, // Количество попыток переподключения
-          retryDelay: 1000, // Задержка между попытками в миллисекундах
+          synchronize: isDevelopment,
+          retryAttempts: 5,
+          retryDelay: 1000,
         };
       },
     }),
