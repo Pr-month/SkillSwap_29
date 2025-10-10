@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { User } from '../modules/users/entities/user.entity';
+import { Skill } from '../modules/users/entities/skill.entity';
 
 @Module({
   imports: [
@@ -28,7 +30,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
           database: dbConfig.database,
           username: dbConfig.username,
           password: dbConfig.password,
-          entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+          entities: [User, Skill],
           migrations: ['dist/migration/**/*{.js,.ts}'],
           synchronize: isDevelopment,
           retryAttempts: 5,
