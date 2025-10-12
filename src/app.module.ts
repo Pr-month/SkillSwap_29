@@ -8,6 +8,7 @@ import { IJwtConfig, IDbConfig } from './config/types';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ConfigModule } from '@nestjs/config';
       inject: [dbConfig.KEY],
       useFactory: (cfg: IDbConfig) => cfg,
     }),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
