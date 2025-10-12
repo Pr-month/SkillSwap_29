@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  ManyToMany,
-  JoinTable,
-} from 'typeorm';
+import { Entity, Column } from 'typeorm';
 import {
   IsEmail,
   IsString,
@@ -15,76 +9,98 @@ import {
   MaxLength,
 } from 'class-validator';
 
-import { Skill } from './skill.entity';
+import { UserRole } from 'src/enums/roles.enum';
 
-@Entity({ name: 'users' })
+@Entity({
+  name: 'users',
+})
 export class User {
-  @PrimaryGeneratedColumn('uuid')
+  @Column({
+    type: 'uuid',
+    primary: true,
+    nullable: false,
+  })
   @IsUUID()
   id: string;
 
-  @Column({ nullable: false })
+  @Column({
+    type: 'varchar',
+    nullable: false,
+  })
   @IsString()
   @MinLength(2)
   @MaxLength(50)
   name: string;
 
-  @Column({ unique: true, nullable: false })
+  @Column({
+    type: 'varchar',
+    unique: true,
+    nullable: false,
+  })
   @IsEmail()
   email: string;
 
-  @Column({ nullable: false })
+  @Column({
+    type: 'varchar',
+    nullable: false,
+  })
   @IsString()
   @MinLength(6)
   password: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   about: string;
 
-  @Column('date', { nullable: true })
+  @Column({
+    type: 'date',
+    nullable: true,
+  })
   @IsDate()
   @IsOptional()
   birthdate: Date;
 
-  @Column({ nullable: true })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
   @IsString()
   @IsOptional()
   city: string;
 
-  @Column({ nullable: true })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
   @IsString()
   @IsOptional()
   gender: string;
 
-  @Column({ nullable: true })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
   @IsString()
   @IsOptional()
   avatar: string;
 
   @Column({
     type: 'enum',
-    enum: ['USER', 'ADMIN'],
-    default: 'USER',
+    enum: UserRole,
+    default: UserRole.USER,
     nullable: false,
   })
-  role: 'USER' | 'ADMIN';
+  role: UserRole;
 
-  @Column({ nullable: true })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
   @IsString()
   @IsOptional()
   refreshToken: string;
-
-  @ManyToMany(() => Skill)
-  @JoinTable({ name: 'user_skills' })
-  skills: Skill[];
-
-  @ManyToMany(() => Skill)
-  @JoinTable({ name: 'user_want_to_learn' })
-  wantToLearn: Skill[];
-
-  @ManyToMany(() => Skill)
-  @JoinTable({ name: 'user_favorite_skills' })
-  favoriteSkills: Skill[];
 }
