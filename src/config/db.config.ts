@@ -1,7 +1,5 @@
 import { registerAs } from '@nestjs/config';
 import { DataSourceOptions } from 'typeorm';
-import { User } from '../modules/users/entities/user.entity';
-import { Skill } from '../modules/users/entities/skill.entity';
 
 export const dbConfig = registerAs(
   'DB',
@@ -13,7 +11,8 @@ export const dbConfig = registerAs(
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_NAME || 'skillswap',
-    synchronize: true,
-    entities: [User, Skill],
+    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+    migrations: ['dist/migration/**/*{.js,.ts}'],
+    synchronize: process.env.NODE_ENV !== 'production',
   }),
 );
