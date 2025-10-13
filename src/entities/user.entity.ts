@@ -1,34 +1,29 @@
 import {
-  Entity,
   Column,
-  // JoinTable,
-  // ManyToMany,
+  Entity,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import {
-  IsEmail,
-  IsString,
   IsDate,
+  IsEmail,
   IsOptional,
+  IsString,
   IsUUID,
-  MinLength,
   MaxLength,
+  MinLength,
 } from 'class-validator';
 
 // import { Skill } from './skill.entity';
 
-import { UserRole } from '../enums/roles.enum';
 import { Gender } from '../enums/gender.enum';
+import { UserRole } from '../enums/roles.enum';
 
 @Entity({
   name: 'users',
 })
 export class User {
-  @Column({
-    type: 'uuid',
-    primary: true,
-    nullable: false,
-  })
+  @PrimaryGeneratedColumn('uuid')
   @IsUUID()
   id: string;
 
