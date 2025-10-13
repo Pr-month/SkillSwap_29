@@ -1,4 +1,10 @@
-import { Entity, Column } from 'typeorm';
+import {
+  Entity,
+  Column,
+  // JoinTable,
+  // ManyToMany,
+} from 'typeorm';
+
 import {
   IsEmail,
   IsString,
@@ -9,7 +15,10 @@ import {
   MaxLength,
 } from 'class-validator';
 
-import { UserRole } from 'src/enums/roles.enum';
+// import { Skill } from './skill.entity';
+
+import { UserRole } from '../enums/roles.enum';
+import { Gender } from '../enums/gender.enum';
 
 @Entity({
   name: 'users',
@@ -73,12 +82,12 @@ export class User {
   city: string;
 
   @Column({
-    type: 'varchar',
-    nullable: true,
+    type: 'enum',
+    enum: Gender,
+    default: Gender.UNKNOWN,
+    nullable: false,
   })
-  @IsString()
-  @IsOptional()
-  gender: string;
+  gender: Gender;
 
   @Column({
     type: 'varchar',
@@ -103,4 +112,16 @@ export class User {
   @IsString()
   @IsOptional()
   refreshToken: string;
+
+  // @ManyToMany(() => Skill)
+  // @JoinTable({ name: 'user_skills' })
+  // skills: Skill[];
+
+  // @ManyToMany(() => Skill)
+  // @JoinTable({ name: 'user_want_to_learn' })
+  // wantToLearn: Skill[];
+
+  // @ManyToMany(() => Skill)
+  // @JoinTable({ name: 'user_favorite_skills' })
+  // favoriteSkills: Skill[];
 }
