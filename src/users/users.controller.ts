@@ -10,4 +10,9 @@ export class UsersController {
     async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<User> {
         return this.userService.findOneById(id);
     }
+
+    @Get('/users')
+    async allUsers(): Promise<User[]> {
+        return this.userService.getAllUsers();
+    }
 }
