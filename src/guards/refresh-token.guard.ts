@@ -1,9 +1,9 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
-import { User } from '../modules/users/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
