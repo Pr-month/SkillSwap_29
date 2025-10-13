@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,6 +14,8 @@ import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly salt = Number(process.env.BCRYPT_SALT) || 10;
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -23,9 +26,9 @@ export class AuthService {
     const existing = await this.userRepository.findOne({
       where: { email: dto.email },
     });
-    if (existing) throw new BadRequestException('Email already exists');
+    if (existing) throw new ConflictException('Email already exists');
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const hashedPassword = await bcrypt.hash(dto.password, this.salt);
 
     const user = this.userRepository.create({
       ...dto,
@@ -81,10 +84,12 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
 
     const accessToken = await this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_ACCESS_SECRET,
       expiresIn: '1h',
     });
 
     const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
       expiresIn: '7d',
     });
 
@@ -92,7 +97,7 @@ export class AuthService {
   }
 
   async updateRefreshToken(userId: string, token: string) {
-    const hashed = await bcrypt.hash(token, 10);
+    const hashed = await bcrypt.hash(token, this.salt);
     await this.userRepository.update(userId, { refreshToken: hashed });
   }
 }
