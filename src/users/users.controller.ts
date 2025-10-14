@@ -11,7 +11,7 @@ export class UsersController {
         return this.userService.findOneById(id);
     }
 
-    @Get('/users')
+    @Get()
     async allUsers(): Promise<User[]> {
         return this.userService.getAllUsers();
     }
