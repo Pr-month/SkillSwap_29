@@ -107,6 +107,7 @@ export class User {
   @IsString()
   @IsOptional()
   refreshToken: string;
+  skills: any;
 
   // @ManyToMany(() => Skill)
   // @JoinTable({ name: 'user_skills' })

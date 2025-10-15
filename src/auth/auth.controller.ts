@@ -1,9 +1,10 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards, HttpCode, HttpStatus, } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { RefreshTokenGuard } from '../guards/refresh-token.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { AuthRequest, RefreshRequest } from './types';
 
 @Controller('auth')
 export class AuthController {
@@ -14,6 +15,7 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -21,14 +23,14 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  async logout(@Req() req: any) {
+  async logout(@Req() req: AuthRequest) { // исправить any
     await this.authService.logout(req.user.sub);
     return { message: 'Successfully logged out' };
   }
 
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
-  async refresh(@Req() req: any) {
+  async refresh(@Req() req: RefreshRequest) { // исправить any
     return this.authService.refreshTokens(req.user.id, req.token);
   }
 }

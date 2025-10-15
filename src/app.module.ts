@@ -22,8 +22,8 @@ import { SkillsModule } from './skills/skills.module';
       global: true,
       inject: [jwtConfig.KEY],
       useFactory: (cfg: IJwtConfig) => ({
-        secret: cfg.secret,
-        signOptions: { expiresIn: cfg.expiresIn },
+        secret: cfg.accessSecret,
+        signOptions: { expiresIn: cfg.accessExpiresIn },
       }),
     }),
     TypeOrmModule.forRootAsync({
