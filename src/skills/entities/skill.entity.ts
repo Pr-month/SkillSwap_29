@@ -1,10 +1,10 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
-  CreateDateColumn, 
-  UpdateDateColumn 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -25,9 +25,9 @@ export class Skill {
   @Column('text', { array: true, default: [] })
   images: string[];
 
-  @ManyToOne(() => User, (user) => user.skills, { 
+  @ManyToOne(() => User, (user) => user.skills, {
     onDelete: 'CASCADE',
-    eager: true
+    eager: true,
   })
   owner: User;
 

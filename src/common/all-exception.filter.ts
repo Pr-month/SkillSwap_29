@@ -5,11 +5,17 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { MulterError } from 'multer';
 import { EntityNotFoundError, QueryFailedError } from 'typeorm';
+
+export interface PostgresError extends Error {
+  code?: string;
+  detail?: string;
+}
 
 @Catch()
 export class AllExceptionFilter implements ExceptionFilter {
-  catch(exception: any, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
@@ -26,7 +32,7 @@ export class AllExceptionFilter implements ExceptionFilter {
 
     if (
       exception instanceof QueryFailedError &&
-      (exception as any).code === '23505'
+      (exception as PostgresError).code === '23505'
     ) {
       return response.status(HttpStatus.CONFLICT).json({
         statusCode: HttpStatus.CONFLICT,
@@ -37,8 +43,8 @@ export class AllExceptionFilter implements ExceptionFilter {
     }
 
     if (
-      exception.name === 'PayloadTooLargeException' ||
-      exception.status === HttpStatus.PAYLOAD_TOO_LARGE
+      exception instanceof MulterError &&
+      exception.code === 'LIMIT_FILE_SIZE'
     ) {
       return response.status(HttpStatus.PAYLOAD_TOO_LARGE).json({
         statusCode: HttpStatus.PAYLOAD_TOO_LARGE,
@@ -47,5 +53,12 @@ export class AllExceptionFilter implements ExceptionFilter {
         timestamp: new Date().toISOString(),
       });
     }
+
+    return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      message: 'Внутренняя ошибка сервера',
+      error: 'Internal Server Error',
+      timestamp: new Date().toISOString(),
+    });
   }
 }
