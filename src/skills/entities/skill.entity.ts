@@ -1,12 +1,12 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
-  CreateDateColumn, 
-  UpdateDateColumn 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { User } from '../../entities/user.entity';
 
 @Entity()
 export class Skill {
@@ -25,11 +25,13 @@ export class Skill {
   @Column('text', { array: true, default: [] })
   images: string[];
 
+  /* закомментил eminur
   @ManyToOne(() => User, (user) => user.skills, { 
     onDelete: 'CASCADE',
     eager: true
   })
   owner: User;
+  */
 
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
