@@ -6,8 +6,13 @@ import { AuthRequest } from 'src/auth/types';
 
 @Controller('users')
 export class UsersController {
-    constructor(private readonly userService: UsersService) {}
+  constructor(private readonly userService: UsersService) {}
 
+    @Get()
+    async allUsers(): Promise<User[]> {
+        return this.userService.getAllUsers();
+    }
+  
     @Get(':id')
     async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<User> {
         return this.userService.findOneById(id);
