@@ -2,6 +2,7 @@ import { Controller, Get, Param, ParseUUIDPipe, Req, UseGuards } from '@nestjs/c
 import { UsersService } from './users.service';
 import { User } from 'src/entities/user.entity';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { AuthRequest } from 'src/auth/types';
 
 @Controller('users')
 export class UsersController {
@@ -14,7 +15,7 @@ export class UsersController {
 
     @UseGuards(JwtAuthGuard)
     @Get('me')
-    async getMe(@Req() req: User): Promise<User> {
-        return this.userService.findOneById(req.id);
+    async getMe(@Req() req: AuthRequest): Promise<User> {
+        return this.userService.findOneById(req.user.sub);
     }
 }
