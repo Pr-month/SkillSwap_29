@@ -69,7 +69,8 @@ export class AuthService {
 
   async refreshTokens(userId: string, refreshToken: string) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user || !user.refreshToken) throw new UnauthorizedException('Access denied');
+    if (!user || !user.refreshToken)
+      throw new UnauthorizedException('Access denied');
 
     const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
     if (!isValid) throw new UnauthorizedException('Access denied');

@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,7 +21,8 @@ export class RefreshTokenGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     const authHeader = request.headers['authorization'];
-    if (!authHeader) throw new UnauthorizedException('Authorization header missing');
+    if (!authHeader)
+      throw new UnauthorizedException('Authorization header missing');
 
     const [, refreshToken] = authHeader.split(' ');
     if (!refreshToken) throw new UnauthorizedException('Refresh token missing');
@@ -25,8 +31,11 @@ export class RefreshTokenGuard implements CanActivate {
       secret: process.env.JWT_REFRESH_SECRET,
     });
 
-    const user = await this.userRepository.findOne({ where: { id: payload.sub } });
-    if (!user || !user.refreshToken) throw new UnauthorizedException('Access denied');
+    const user = await this.userRepository.findOne({
+      where: { id: payload.sub },
+    });
+    if (!user || !user.refreshToken)
+      throw new UnauthorizedException('Access denied');
 
     const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
     if (!isValid) throw new UnauthorizedException('Invalid refresh token');

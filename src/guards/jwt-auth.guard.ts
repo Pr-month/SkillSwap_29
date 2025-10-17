@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -9,13 +14,16 @@ export class JwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers.authorization;
 
-    if (!authHeader) throw new UnauthorizedException('Authorization header missing');
+    if (!authHeader)
+      throw new UnauthorizedException('Authorization header missing');
 
     const [, token] = authHeader.split(' ');
     if (!token) throw new UnauthorizedException('Token missing');
 
     try {
-      request.user = this.jwtService.verify(token, { secret: process.env.JWT_ACCESS_SECRET });
+      request.user = this.jwtService.verify(token, {
+        secret: process.env.JWT_ACCESS_SECRET,
+      });
       return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
