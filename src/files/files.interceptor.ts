@@ -12,17 +12,16 @@ import { ConfigService } from '@nestjs/config';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
+import { IFileConfig } from '../config/types';
 
 @Injectable()
 export class FilesInterceptor implements NestInterceptor {
   private multerInterceptor: NestInterceptor;
 
   constructor(private readonly configService: ConfigService) {
-    const maxSize =
-      this.configService.get<number>('FILE_CONFIG.fileSize') || 2 * 1024 * 1024;
-    const allowedTypes = this.configService.get<string[]>(
-      'FILE_CONFIG.allowedMimeTypes',
-    ) || ['image/jpeg', 'image/png'];
+    const fileConfig = this.configService.get('FILE_CONFIG') as IFileConfig;
+    const maxSize = fileConfig.fileSize;
+    const allowedTypes = fileConfig.allowedMimeTypes;
 
     // FileInterceptor возвращает класс (Type<NestInterceptor>)
     const MixinInterceptorClass = FileInterceptor('file', {
