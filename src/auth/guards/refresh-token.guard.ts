@@ -26,19 +26,24 @@ export class RefreshTokenGuard implements CanActivate {
     const [, refreshToken] = authHeader.split(' ');
     if (!refreshToken) throw new UnauthorizedException('Refresh token missing');
 
-    const payload = await this.jwtService.verifyAsync(refreshToken, {
-      secret: this.jwtConfig.refreshSecret,
-    });
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.jwtConfig.refreshSecret,
+      });
 
-    const user = await this.userRepository.findOne({ where: { id: payload.sub } });
-    if (!user || !user.refreshToken) throw new UnauthorizedException('Access denied');
+      const user = await this.userRepository.findOne({ where: { id: payload.sub } });
+      if (!user || !user.refreshToken) throw new UnauthorizedException('Access denied');
 
-    const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
-    if (!isValid) throw new UnauthorizedException('Invalid refresh token');
+      const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
+      if (!isValid) throw new UnauthorizedException('Invalid refresh token');
 
-    request.user = user;
-    request.token = refreshToken;
+      request.user = user;
+      request.token = refreshToken;
 
-    return true;
+      return true;
+      
+    } catch (err) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
   }
 }
