@@ -1,15 +1,20 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/entities/user.entity';
+import { jwtConfig } from 'src/config/jwt.config';
+import { IJwtConfig } from 'src/config/types';
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(User) 
+    private readonly userRepository: Repository<User>,
+    @Inject(jwtConfig.KEY)
+    private readonly jwtConfig: IJwtConfig,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -22,7 +27,7 @@ export class RefreshTokenGuard implements CanActivate {
     if (!refreshToken) throw new UnauthorizedException('Refresh token missing');
 
     const payload = await this.jwtService.verifyAsync(refreshToken, {
-      secret: process.env.JWT_REFRESH_SECRET,
+      secret: this.jwtConfig.refreshSecret,
     });
 
     const user = await this.userRepository.findOne({ where: { id: payload.sub } });

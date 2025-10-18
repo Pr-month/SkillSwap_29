@@ -16,11 +16,11 @@ import { JwtPayload } from './types';
 import { jwtConfig } from 'src/config/jwt.config';
 import { IAppConfig, IJwtConfig } from 'src/config/types';
 import { appConfig } from 'src/config/app.config';
+import { UserRole } from 'src/enums/roles.enum';
+import { Gender } from 'src/enums/gender.enum';
 
 @Injectable()
 export class AuthService {
-  // private readonly salt = Number(process.env.BCRYPT_SALT) || 10; добавить в app.config
-  // перенести гарды в auth DONE
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -42,6 +42,8 @@ export class AuthService {
     const user = this.userRepository.create({
       ...dto,
       password: hashedPassword,
+      role: dto.role || UserRole.USER,
+      gender: dto.gender || Gender.UNKNOWN,
     });
     await this.userRepository.save(user);
 
@@ -52,7 +54,7 @@ export class AuthService {
     return { user: userSafe, ...tokens };
   }
 
-  async login(dto: LoginDto) { // возвращает 201, а не 200 DONE
+  async login(dto: LoginDto) {
     const user = await this.userRepository.findOne({
       where: { email: dto.email },
     });
@@ -91,15 +93,17 @@ export class AuthService {
 
   async generateTokens(user: User) {
     const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
-
+    
+    // @ts-expect-error: TypeScript ругается на accessExpiresIn, но значение корректное
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.jwtConfig.accessSecret,
       expiresIn: this.jwtConfig.accessExpiresIn,
     });
 
+    // @ts-expect-error: TypeScript ругается на refreshExpiresIn, но значение корректное
     const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: '7d',
+      secret: this.jwtConfig.refreshSecret,
+      expiresIn: this.jwtConfig.refreshExpiresIn,
     });
 
     return { accessToken, refreshToken };

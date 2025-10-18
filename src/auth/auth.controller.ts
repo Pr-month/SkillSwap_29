@@ -23,14 +23,14 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  async logout(@Req() req: AuthRequest) { // исправить any
+  async logout(@Req() req: AuthRequest) {
     await this.authService.logout(req.user.sub);
     return { message: 'Successfully logged out' };
   }
 
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
-  async refresh(@Req() req: RefreshRequest) { // исправить any
+  async refresh(@Req() req: RefreshRequest) {
     return this.authService.refreshTokens(req.user.id, req.token);
   }
 }

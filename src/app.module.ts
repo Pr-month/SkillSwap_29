@@ -21,6 +21,7 @@ import { SkillsModule } from './skills/skills.module';
     JwtModule.registerAsync({
       global: true,
       inject: [jwtConfig.KEY],
+      // @ts-expect-error: TypeScript ругается на accessExpiresIn, но значение корректное
       useFactory: (cfg: IJwtConfig) => ({
         secret: cfg.accessSecret,
         signOptions: { expiresIn: cfg.accessExpiresIn },
