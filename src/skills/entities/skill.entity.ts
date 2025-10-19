@@ -1,4 +1,3 @@
-import { User } from '../../entities/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,7 +6,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
 @Entity()
 export class Skill {
   @PrimaryGeneratedColumn('uuid')
