@@ -6,8 +6,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../entities/user.entity';
-
 @Entity()
 export class Skill {
   @PrimaryGeneratedColumn('uuid')
@@ -25,13 +23,11 @@ export class Skill {
   @Column('text', { array: true, default: [] })
   images: string[];
 
-  /* закомментил eminur
-  @ManyToOne(() => User, (user) => user.skills, { 
+  @ManyToOne(() => User, (user) => user.skills, {
     onDelete: 'CASCADE',
-    eager: true
+    eager: true,
   })
   owner: User;
-  */
 
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
