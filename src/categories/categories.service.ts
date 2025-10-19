@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -14,12 +18,16 @@ export class CategoriesService {
 
   async findAll(): Promise<Category[]> {
     return this.categoryRepository.find({
-      relations: ['parent', 'children'],
+      where: { parent: IsNull() },
+      relations: ['children'],
     });
   }
-  
+
   async findOne(id: string): Promise<Category> {
-    const category = await this.categoryRepository.findOne({ where: { id } });
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+      relations: ['parent', 'children'],
+    });
     if (!category) {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
@@ -27,15 +35,41 @@ export class CategoriesService {
   }
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+    if (createCategoryDto.parentId) {
+      const parentCategory = await this.categoryRepository.findOne({
+        where: { id: createCategoryDto.parentId },
+      });
+      if (!parentCategory) {
+        throw new BadRequestException(`
+          Parent category with ID ${createCategoryDto.parentId} not found`);
+      }
+    }
+
     const category = this.categoryRepository.create(createCategoryDto);
     return this.categoryRepository.save(category);
   }
 
-  async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+  async update(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<Category> {
     const category = await this.findOne(id);
-    
-    const updatedCategory = this.categoryRepository.merge(category, updateCategoryDto);
-    
+
+    if (updateCategoryDto.parentId) {
+      const parentCategory = await this.categoryRepository.findOne({
+        where: { id: updateCategoryDto.parentId },
+      });
+      if (!parentCategory) {
+        throw new BadRequestException(`
+          Parent category with ID ${updateCategoryDto.parentId} not found`);
+      }
+    }
+
+    const updatedCategory = this.categoryRepository.merge(
+      category,
+      updateCategoryDto,
+    );
+
     return this.categoryRepository.save(updatedCategory);
   }
 
