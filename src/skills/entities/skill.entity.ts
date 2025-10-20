@@ -1,12 +1,14 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
-  CreateDateColumn, 
-  UpdateDateColumn 
-} from 'typeorm';
 import { User } from '../../entities/user.entity';
+import { Category } from 'src/entities/category.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
 
 @Entity()
 export class Skill {
@@ -19,15 +21,18 @@ export class Skill {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ length: 50 })
-  category: string;
+  @ManyToOne(() => Category, category => category.skills, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
+  category: Category;
 
   @Column('text', { array: true, default: [] })
   images: string[];
 
-  @ManyToOne(() => User, (user) => user.skills, { 
+  @ManyToOne(() => User, (user) => user.skills, {
     onDelete: 'CASCADE',
-    eager: true
+    eager: true,
   })
   owner: User;
 
