@@ -21,6 +21,7 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@Req() req: AuthRequest) {
@@ -28,6 +29,7 @@ export class AuthController {
     return { message: 'Successfully logged out' };
   }
 
+  @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   async refresh(@Req() req: RefreshRequest) {

@@ -94,13 +94,13 @@ export class AuthService {
   async generateTokens(user: User) {
     const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
     
-    // @ts-expect-error: TypeScript ругается на accessExpiresIn, но значение корректное
+    // @ts-ignore: TypeScript ругается на accessExpiresIn, но значение корректное
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.jwtConfig.accessSecret,
       expiresIn: this.jwtConfig.accessExpiresIn,
     });
 
-    // @ts-expect-error: TypeScript ругается на refreshExpiresIn, но значение корректное
+    // @ts-ignore: TypeScript ругается на refreshExpiresIn, но значение корректное
     const refreshToken = await this.jwtService.signAsync(payload, {
       secret: this.jwtConfig.refreshSecret,
       expiresIn: this.jwtConfig.refreshExpiresIn,
