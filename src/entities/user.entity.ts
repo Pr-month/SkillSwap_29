@@ -10,8 +10,6 @@ import {
   MinLength,
 } from 'class-validator';
 
-// import { Skill } from './skill.entity';
-
 import { Gender } from '../enums/gender.enum';
 import { UserRole } from '../enums/roles.enum';
 import { Skill } from './skill.entity';
@@ -104,7 +102,6 @@ export class User {
   @IsString()
   @IsOptional()
   refreshToken: string;
-  skills: any;
 
   @ManyToMany(() => Skill)
   @JoinTable({ name: 'user_skills' })
