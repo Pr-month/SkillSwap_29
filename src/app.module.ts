@@ -25,9 +25,10 @@ import { FilesModule } from './files/files.module';
     JwtModule.registerAsync({
       global: true,
       inject: [jwtConfig.KEY],
+      // @ts-ignore: TypeScript ругается на accessExpiresIn, но значение корректное
       useFactory: (cfg: IJwtConfig) => ({
-        secret: cfg.secret,
-        signOptions: { expiresIn: cfg.expiresIn },
+        secret: cfg.accessSecret,
+        signOptions: { expiresIn: cfg.accessExpiresIn },
       }),
     }),
     TypeOrmModule.forRootAsync({
