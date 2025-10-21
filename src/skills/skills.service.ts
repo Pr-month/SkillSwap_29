@@ -2,42 +2,49 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindManyOptions, Like } from 'typeorm';
+import { Repository, FindManyOptions, Like, FindOptionsWhere } from 'typeorm';
 import { Skill } from './entities/skill.entity';
-import { User } from '../entities/user.entity';
-import { CreateSkillDto } from './dto/create-skill.dto';
-import { UpdateSkillDto } from './dto/update-skill.dto';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
+import { CreateSkillDto } from './dto/create-skill.dto';
+import { UpdateSkillDto } from './dto/update-skill.dto';
+import { FindSkillsQueryDto } from './dto/find-skills.dto';
 
 @Injectable()
 export class SkillsService {
+  private readonly logger = new Logger(SkillsService.name);
+
   constructor(
     @InjectRepository(Skill)
     private skillsRepository: Repository<Skill>,
   ) {}
 
-  async findAll(query: any): Promise<{ data: Skill[]; count: number }> {
-    const { category, search, limit = 20, offset = 0 } = query;
-    const options: FindManyOptions<Skill> = {
-      take: +limit,
-      skip: +offset,
-      order: { createdAt: 'DESC' },
-      relations: ['owner'],
-    };
+  async findAll(
+    query: FindSkillsQueryDto,
+  ): Promise<{ data: Skill[]; count: number }> {
+    const { page, limit, category, search } = query;
+    const offset = (page - 1) * limit;
+
+    const where: FindOptionsWhere<Skill> = {};
 
     if (category) {
-      options.where = { category };
+      where.category = category;
     }
 
     if (search) {
-      options.where = {
-        ...options.where,
-        title: Like(`%${search}%`),
-      };
+      where.title = Like(`%${search.trim()}%`);
     }
+
+    const options: FindManyOptions<Skill> = {
+      where,
+      take: limit,
+      skip: offset,
+      order: { createdAt: 'DESC' },
+      relations: ['owner'],
+    };
 
     const [data, count] = await this.skillsRepository.findAndCount(options);
     return { data, count };
@@ -54,10 +61,10 @@ export class SkillsService {
     return skill;
   }
 
-  async create(createSkillDto: CreateSkillDto, user: User): Promise<Skill> {
+  async create(createSkillDto: CreateSkillDto, userId: string): Promise<Skill> {
     const skill = this.skillsRepository.create({
       ...createSkillDto,
-      owner: user,
+      owner: { id: userId },
     });
     return this.skillsRepository.save(skill);
   }
