@@ -11,5 +11,6 @@ import { Category } from '../entities/category.entity';
   ],
   controllers: [SkillsController],
   providers: [SkillsService],
+  exports: [SkillsService],
 })
 export class SkillsModule {}

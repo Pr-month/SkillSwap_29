@@ -7,6 +7,9 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
+} from 'typeorm';
+import { User } from '../../entities/user.entity';
 } from 'typeorm';
 
 
@@ -30,10 +33,8 @@ export class Skill {
   @Column('text', { array: true, default: [] })
   images: string[];
 
-  @ManyToOne(() => User, (user) => user.skills, {
-    onDelete: 'CASCADE',
-    eager: true,
-  })
+  @ManyToOne(() => User, (user) => user.skills, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'ownerId' })
   owner: User;
 
   @CreateDateColumn({ type: 'timestamp with time zone' })

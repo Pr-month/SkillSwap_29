@@ -1,7 +1,54 @@
-import { Controller } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+  Query,
+} from '@nestjs/common';
 import { SkillsService } from './skills.service';
+import { CreateSkillDto } from './dto/create-skill.dto';
+import { UpdateSkillDto } from './dto/update-skill.dto';
+import { FindSkillsQueryDto } from './dto/find-skills.dto';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { AuthRequest } from '../auth/types';
 
 @Controller('skills')
 export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}
+
+  @Get()
+  async findAll(@Query() query: FindSkillsQueryDto) {
+    return this.skillsService.findAll(query);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.skillsService.findOne(id);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  create(@Body() createSkillDto: CreateSkillDto, @Req() req: AuthRequest) {
+    return this.skillsService.create(createSkillDto, req.user.sub);
+  }
+
+  @Post(':id')
+  @UseGuards(JwtAuthGuard)
+  update(
+    @Param('id') id: string,
+    @Body() updateSkillDto: UpdateSkillDto,
+    @Req() req: AuthRequest,
+  ) {
+    return this.skillsService.update(id, updateSkillDto, req.user.sub);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  remove(@Param('id') id: string, @Req() req: AuthRequest) {
+    return this.skillsService.remove(id, req.user.sub);
+  }
 }
