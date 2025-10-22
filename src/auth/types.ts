@@ -1,10 +1,11 @@
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
+import { UserRole } from 'src/enums/roles.enum';
 
 export type JwtPayload = {
   sub: string;
   email: string;
-  role: string;
+  role: UserRole;
 };
 
 export type AuthRequest = Request & {

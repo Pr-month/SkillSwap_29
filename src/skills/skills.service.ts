@@ -5,13 +5,14 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindManyOptions, Like, FindOptionsWhere } from 'typeorm';
+import { Repository, FindManyOptions, Like, FindOptionsWhere, Equal } from 'typeorm';
 import { Skill } from './entities/skill.entity';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { FindSkillsQueryDto } from './dto/find-skills.dto';
+import { Category } from '../entities/category.entity';
 
 @Injectable()
 export class SkillsService {
@@ -20,7 +21,7 @@ export class SkillsService {
   constructor(
     @InjectRepository(Skill)
     private skillsRepository: Repository<Skill>,
-  ) {}
+  ) { }
 
   async findAll(
     query: FindSkillsQueryDto,
@@ -30,8 +31,9 @@ export class SkillsService {
 
     const where: FindOptionsWhere<Skill> = {};
 
+
     if (category) {
-      where.category = category;
+      where.category = Equal(category);
     }
 
     if (search) {
@@ -65,6 +67,7 @@ export class SkillsService {
     const skill = this.skillsRepository.create({
       ...createSkillDto,
       owner: { id: userId },
+      category: { id: createSkillDto.category }
     });
     return this.skillsRepository.save(skill);
   }
@@ -80,10 +83,17 @@ export class SkillsService {
       throw new ForbiddenException('Вы можете обновлять только свои навыки');
     }
 
-    return this.skillsRepository.save({
-      ...skill,
-      ...updateSkillDto,
+    const updatedSkill = this.skillsRepository.merge(skill, {
+      title: updateSkillDto.title,
+      description: updateSkillDto.description,
+      images: updateSkillDto.images,
     });
+
+    if (updateSkillDto.category !== undefined) {
+      updatedSkill.category = { id: updateSkillDto.category } as Category;
+    }
+
+    return this.skillsRepository.save(updatedSkill);
   }
 
   async remove(id: string, userId: string): Promise<void> {

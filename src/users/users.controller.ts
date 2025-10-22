@@ -6,13 +6,13 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) {}
+    constructor(private readonly userService: UsersService) { }
 
     @Get()
-    async allUsers(): Promise<User[]> {
+    async allUsers() {
         return this.userService.getAllUsers();
     }
-  
+
     @Get(':id')
     async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<User> {
         return this.userService.findOneById(id);

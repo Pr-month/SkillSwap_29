@@ -9,9 +9,6 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../../entities/user.entity';
-} from 'typeorm';
-
 
 @Entity()
 export class Skill {
