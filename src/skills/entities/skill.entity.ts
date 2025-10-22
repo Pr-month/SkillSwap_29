@@ -1,3 +1,5 @@
+import { User } from '../../entities/user.entity';
+import { Category } from 'src/entities/category.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,6 +10,8 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../entities/user.entity';
+} from 'typeorm';
+
 
 @Entity()
 export class Skill {
@@ -20,8 +24,11 @@ export class Skill {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ length: 50 })
-  category: string;
+  @ManyToOne(() => Category, category => category.skills, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
+  category: Category;
 
   @Column('text', { array: true, default: [] })
   images: string[];

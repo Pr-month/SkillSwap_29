@@ -1,8 +1,4 @@
-import {
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 import {
   IsDate,
@@ -14,10 +10,9 @@ import {
   MinLength,
 } from 'class-validator';
 
-// import { Skill } from './skill.entity';
-
 import { Gender } from '../enums/gender.enum';
 import { UserRole } from '../enums/roles.enum';
+import { Skill } from './skill.entity';
 
 @Entity({
   name: 'users',
@@ -108,9 +103,9 @@ export class User {
   @IsOptional()
   refreshToken: string;
 
-  // @ManyToMany(() => Skill)
-  // @JoinTable({ name: 'user_skills' })
-  // skills: Skill[];
+  @ManyToMany(() => Skill)
+  @JoinTable({ name: 'user_skills' })
+  skills: Skill[];
 
   // @ManyToMany(() => Skill)
   // @JoinTable({ name: 'user_want_to_learn' })
