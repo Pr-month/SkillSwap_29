@@ -4,6 +4,9 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UserRole } from 'src/enums/roles.enum';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { HasRoles } from 'src/auth/decorators/roles.decorator';
 
 @Controller('categories')
 export class CategoriesController {
@@ -14,11 +17,15 @@ export class CategoriesController {
     return this.categoriesService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(UserRole.ADMIN)
   @Post()
   async createCategory(@Body() createCategoryDto: CreateCategoryDto): Promise<Category> {
     return this.categoriesService.create(createCategoryDto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(UserRole.ADMIN)
   @Patch(':id')
   async updateCategory(
     @Param('id') id: string,
@@ -27,6 +34,8 @@ export class CategoriesController {
     return this.categoriesService.update(id, updateCategoryDto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(UserRole.ADMIN)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT) // 204 статус
   async deleteCategory(@Param('id') id: string): Promise<void> {
