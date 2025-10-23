@@ -3,14 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SkillsService } from './skills.service';
 import { SkillsController } from './skills.controller';
 import { Skill } from './entities/skill.entity';
-import { Category } from '../entities/category.entity'; 
+import { Category } from '../entities/category.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Skill, Category]),
-  ],
+  imports: [TypeOrmModule.forFeature([Skill, Category])],
   controllers: [SkillsController],
   providers: [SkillsService],
-  exports: [SkillsService],
+  exports: [SkillsService, TypeOrmModule],
 })
 export class SkillsModule {}
