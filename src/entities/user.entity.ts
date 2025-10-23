@@ -1,4 +1,10 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 import {
   IsDate,
@@ -12,7 +18,7 @@ import {
 
 import { Gender } from '../enums/gender.enum';
 import { UserRole } from '../enums/roles.enum';
-import { Skill } from './skill.entity';
+import { Skill } from '../skills/entities/skill.entity';
 import { Exclude } from 'class-transformer';
 
 @Entity({

@@ -1,5 +1,5 @@
 import { User } from '../../entities/user.entity';
-import { Category } from 'src/entities/category.entity';
+import { Category } from '../../entities/category.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -21,7 +21,7 @@ export class Skill {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @ManyToOne(() => Category, category => category.skills, {
+  @ManyToOne(() => Category, (category) => category.skills, {
     onDelete: 'CASCADE',
     nullable: true,
   })
