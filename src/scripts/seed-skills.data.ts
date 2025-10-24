@@ -1,8 +1,8 @@
-export interface SkillSeedData {
+export type SkillSeedData = {
   title: string;
   description: string;
   categoryName: string;
-}
+};
 
 export const skillsData: SkillSeedData[] = [
   {

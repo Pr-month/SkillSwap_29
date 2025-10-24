@@ -1,4 +1,4 @@
-type CategoryData = {
+export type CategoryData = {
   name: string;
   children?: CategoryData[];
 };
