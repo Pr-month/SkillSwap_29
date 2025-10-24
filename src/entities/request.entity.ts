@@ -1,5 +1,5 @@
-import { User } from '../../entities/user.entity';
-import { Skill } from '../../skills/entities/skill.entity';
+import { User } from './user.entity';
+import { Skill } from './skill.entity';
 import { RequestStatus } from '../enums/request-status.enum';
 import {
   Entity,

@@ -2,8 +2,8 @@ import { DataSource } from 'typeorm';
 import { dbConfig } from './db.config';
 import { User } from '../entities/user.entity';
 import { Category } from '../entities/category.entity';
-import { Skill } from '../skills/entities/skill.entity';
-import { Request } from '../requests/entities/request.entity';
+import { Skill } from '../entities/skill.entity';
+import { Request } from '../entities/request.entity';
 
 const dbConfiguration = dbConfig();
 

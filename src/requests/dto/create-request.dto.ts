@@ -1,4 +1,4 @@
-import { RequestStatus } from '../enums/request-status.enum';
+import { RequestStatus } from '../../enums/request-status.enum';
 import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateRequestDto {

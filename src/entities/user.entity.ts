@@ -18,7 +18,7 @@ import {
 
 import { Gender } from '../enums/gender.enum';
 import { UserRole } from '../enums/roles.enum';
-import { Skill } from '../skills/entities/skill.entity';
+import { Skill } from './skill.entity';
 import { Exclude } from 'class-transformer';
 
 @Entity({

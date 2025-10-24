@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { RequestStatus } from './enums/request-status.enum';
+import { RequestStatus } from '../enums/request-status.enum';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthRequest } from '../auth/types';
 import { UserRole } from '../enums/roles.enum';

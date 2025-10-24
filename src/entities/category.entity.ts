@@ -1,4 +1,4 @@
-import { Skill } from '../skills/entities/skill.entity';
+import { Skill } from './skill.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

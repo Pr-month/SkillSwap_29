@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, In } from 'typeorm';
-import { Request } from './entities/request.entity';
+import { Request } from '../entities/request.entity';
 import { User } from '../entities/user.entity';
-import { Skill } from '../skills/entities/skill.entity';
+import { Skill } from '../entities/skill.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { RequestStatus } from './enums/request-status.enum';
+import { RequestStatus } from '../enums/request-status.enum';
 
 @Injectable()
 export class RequestsService {
