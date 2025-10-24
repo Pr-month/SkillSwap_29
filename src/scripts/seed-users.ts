@@ -88,7 +88,7 @@ const users: UserData[] = [
   },
 ];
 
-async function seed() {
+async function seedusers() {
   try {
     console.log('🔄 Начало заполнения базы данных тестовыми пользователями...');
 
@@ -138,4 +138,12 @@ async function seed() {
 }
 
 // Запускаем функцию заполнения базы данных
-seed();
+seedusers()
+  .catch((error) =>
+    console.error('❌ Ошибка при загрузке пользователей:', error),
+  )
+  .finally(() => {
+    if (AppDataSource.isInitialized) {
+      AppDataSource.destroy();
+    }
+  });
