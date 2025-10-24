@@ -5,6 +5,10 @@ import { UserRole } from '../enums/roles.enum';
 import * as bcrypt from 'bcrypt';
 import { appConfig } from '../config/app.config';
 
+// Этот скрипт предназначен для заполнения базы тестовыми пользователями
+// Используется только в целях разработки и тестирования
+console.log('🔄 Запуск сида тестовых пользователей...');
+
 interface UserData {
   name: string;
   email: string;
@@ -17,20 +21,8 @@ interface UserData {
   avatar?: string;
 }
 
-const users: UserData[] = [
-  // Администратор
-  {
-    name: 'Администратор Системы',
-    email: 'admin@skillswap.com',
-    password: 'admin123',
-    role: UserRole.ADMIN,
-    about: 'Системный администратор платформы',
-    city: 'Москва',
-    gender: Gender.UNKNOWN,
-    birthdate: new Date('1990-01-01'),
-    avatar: 'https://i.pravatar.cc/150?img=1',
-  },
-  // Обычные пользователи
+// Тестовые пользователи для разработки и тестирования
+const testUsers: UserData[] = [
   {
     name: 'Иван Петров',
     email: 'ivan@example.com',
@@ -88,46 +80,43 @@ const users: UserData[] = [
   },
 ];
 
-async function seedusers() {
+async function seedTestUsers() {
   try {
-    console.log('🔄 Начало заполнения базы данных тестовыми пользователями...');
-
     await AppDataSource.initialize();
     const userRepo = AppDataSource.getRepository(User);
 
-    // Проверяем, есть ли уже пользователи в базе
-    const userCount = await userRepo.count();
-    if (userCount > 0) {
-      console.log(
-        'ℹ️  В базе данных уже есть пользователи. Заполнение пропущено.',
-      );
-      return;
-    }
+    console.log('👥 Создание тестовых пользователей...');
 
-    console.log('👥 Создание пользователей...');
+    // Создаем тестовых пользователей с хешированными паролями
+    for (const userData of testUsers) {
+      // Проверяем, существует ли уже пользователь с таким email
+      const existingUser = await userRepo.findOne({
+        where: { email: userData.email },
+      });
+      if (existingUser) {
+        console.log(
+          `ℹ️  Пользователь с email ${userData.email} уже существует, пропускаем.`,
+        );
+        continue;
+      }
 
-    // Создаем пользователей с хешированными паролями
-    for (const userData of users) {
       const hashedPassword = await bcrypt.hash(
         userData.password,
         appConfig().bcryptSalt,
       );
+
       const user = userRepo.create({
         ...userData,
         password: hashedPassword,
       });
+
       await userRepo.save(user);
-      console.log(
-        `✅ Создан пользователь: ${userData.email} (${userData.role === UserRole.ADMIN ? 'Администратор' : 'Пользователь'})`,
-      );
+      console.log(`✅ Создан тестовый пользователь: ${userData.email}`);
     }
 
-    console.log('🎉 Заполнение базы данных успешно завершено!');
-    console.log('🔑 Данные для входа администратора:');
-    console.log('📧 Email: admin@skillswap.com');
-    console.log('🔐 Пароль: admin123');
+    console.log('🎉 Заполнение тестовыми пользователями завершено!');
   } catch (error) {
-    console.error('❌ Ошибка при заполнении базы данных:', error);
+    console.error('❌ Ошибка при создании тестовых пользователей:', error);
     process.exit(1);
   } finally {
     if (AppDataSource.isInitialized) {
@@ -137,13 +126,5 @@ async function seedusers() {
   }
 }
 
-// Запускаем функцию заполнения базы данных
-seedusers()
-  .catch((error) =>
-    console.error('❌ Ошибка при загрузке пользователей:', error),
-  )
-  .finally(() => {
-    if (AppDataSource.isInitialized) {
-      AppDataSource.destroy();
-    }
-  });
+// Запускаем функцию заполнения тестовыми пользователями
+void seedTestUsers();

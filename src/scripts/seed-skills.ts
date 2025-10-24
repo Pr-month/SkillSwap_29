@@ -3,45 +3,7 @@ import { Skill } from '../entities/skill.entity';
 import { Category } from '../entities/category.entity';
 import { User } from '../entities/user.entity';
 import { UserRole } from '../enums/roles.enum';
-
-const skillsData = [
-  {
-    title: 'Разработка сайтов на React',
-    description:
-      'Помогу освоить React, Redux, Next.js. Научу создавать современные веб-приложения.',
-    categoryName: 'Веб-разработка',
-  },
-  {
-    title: 'Создание логотипов в Adobe Illustrator',
-    description:
-      'Научу основам работы в Illustrator, созданию векторной графики и логотипов.',
-    categoryName: 'Графический дизайн',
-  },
-  {
-    title: 'Продвижение в Instagram',
-    description:
-      'Расскажу, как создавать контент, привлекать подписчиков и настраивать рекламу в Instagram.',
-    categoryName: 'SMM',
-  },
-  {
-    title: 'Обработка фотографий в Lightroom',
-    description:
-      'Покажу, как улучшить ваши фотографии с помощью Adobe Lightroom. Цветокоррекция, ретушь и многое другое.',
-    categoryName: 'Фотография',
-  },
-  {
-    title: 'Разработка мобильных приложений на Flutter',
-    description:
-      'Научу создавать кроссплатформенные мобильные приложения для iOS и Android с помощью фреймворка Flutter.',
-    categoryName: 'Мобильная разработка',
-  },
-  {
-    title: 'Настройка контекстной рекламы в Яндекс.Директ',
-    description:
-      'Помогу разобраться в настройке и ведении рекламных кампаний в Яндекс.Директ. Сбор семантики, написание объявлений, аналитика.',
-    categoryName: 'Контекстная реклама',
-  },
-];
+import { skillsData } from './seed-skills.data';
 
 async function seedSkills() {
   await AppDataSource.initialize();
@@ -73,27 +35,32 @@ async function seedSkills() {
 
   console.log('🔄 Начинаем загрузку навыков...');
 
-  for (const skillData of skillsData) {
-    const category = categories.find((c) => c.name === skillData.categoryName);
-    if (!category) {
-      console.warn(
-        `⚠️ Категория "${skillData.categoryName}" не найдена. Пропускаем навык "${skillData.title}".`,
-      );
-      continue;
-    }
+  // Используем индекс для циклического перебора пользователей
+  let userIndex = 0;
 
-    // Выбираем случайного пользователя
-    const randomUser = users[Math.floor(Math.random() * users.length)];
+  for (const skillData of skillsData) {
+    // Выбираем случайную категорию из списка
+    const randomCategoryIndex = Math.floor(Math.random() * categories.length);
+    const category = categories[randomCategoryIndex];
+
+    console.log(
+      `✅ Навык "${skillData.title}" будет создан с категорией "${category.name}"`,
+    );
+
+    // Выбираем следующего пользователя по кругу
+    const user = users[userIndex];
+    userIndex = (userIndex + 1) % users.length;
 
     const skill = skillRepo.create({
-      ...skillData,
+      title: skillData.title,
+      description: skillData.description,
       category: category,
-      owner: randomUser,
+      owner: user,
     });
 
     await skillRepo.save(skill);
     console.log(
-      `✅ Создан навык: "${skill.title}" в категории "${category.name}" для пользователя ${randomUser.email}`,
+      `✅ Создан навык: "${skill.title}" в категории "${category.name}" для пользователя ${user.email}`,
     );
   }
 
@@ -104,6 +71,6 @@ seedSkills()
   .catch((error) => console.error('❌ Ошибка при загрузке навыков:', error))
   .finally(() => {
     if (AppDataSource.isInitialized) {
-      AppDataSource.destroy();
+      void AppDataSource.destroy();
     }
   });
