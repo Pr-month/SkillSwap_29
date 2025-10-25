@@ -1,15 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject ,BadRequestException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { appConfig } from 'src/config/app.config';
+import { IAppConfig } from 'src/config/types';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @Inject(appConfig.KEY)
+    private readonly appConfig: IAppConfig,
   ) {}
 
   async findOneById(id: string): Promise<User> {
@@ -34,11 +37,11 @@ export class UsersService {
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     
     if (isMatch) {
-      const hashedNewPassword = await bcrypt.hash(newPassword, appConfig().bcryptSalt);
+      const hashedNewPassword = await bcrypt.hash(newPassword, this.appConfig.bcryptSalt);
       await this.userRepository.update(id, { password: hashedNewPassword });
       return {message: "Пароль успешно обновлен"};
     } else {
-      throw new NotFoundException(`Старый пароль не совпадает`);
+      throw new BadRequestException(`Старый пароль не совпадает`);
     }
   }
 }
