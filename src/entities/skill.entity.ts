@@ -1,9 +1,42 @@
-import { IsUUID } from 'class-validator';
-import { Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from './user.entity';
+import { Category } from './category.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  JoinColumn,
+} from 'typeorm';
 
-@Entity({ name: 'skills' })
+@Entity()
 export class Skill {
   @PrimaryGeneratedColumn('uuid')
-  @IsUUID()
   id: string;
+
+  @Column({ length: 100 })
+  title: string;
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
+  @ManyToOne(() => Category, (category) => category.skills, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
+  category: Category;
+
+  @Column('text', { array: true, default: [] })
+  images: string[];
+
+  @ManyToOne(() => User, (user) => user.skills, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'ownerId' })
+  owner: User;
+
+  @CreateDateColumn({ type: 'timestamp with time zone' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
+  updatedAt: Date;
 }
