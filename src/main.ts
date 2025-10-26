@@ -3,7 +3,6 @@ import { WinstonModule } from 'nest-winston';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { AllExceptionFilter } from './common/all-exception.filter';
-import { AllExceptionsFilter } from './filters/http-exception.filter';
 import { loggingConfig } from './logger';
 import { Logger } from '@nestjs/common';
 import { appConfig } from './config/app.config';
@@ -14,9 +13,8 @@ async function bootstrap() {
   });
   const logger = new Logger('App');
 
-  app.useGlobalFilters(new AllExceptionsFilter());
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalFilters(new AllExceptionFilter());
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   app.useGlobalPipes(
     new ValidationPipe({
