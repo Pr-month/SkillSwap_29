@@ -1,5 +1,5 @@
-import { User } from '../../entities/user.entity';
-import { Category } from '../../entities/category.entity';
+import { User } from './user.entity';
+import { Category } from './category.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -10,7 +10,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 
-@Entity({ name: 'skills' })
+@Entity()
 export class Skill {
   @PrimaryGeneratedColumn('uuid')
   id: string;

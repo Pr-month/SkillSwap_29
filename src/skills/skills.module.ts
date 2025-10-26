@@ -13,6 +13,6 @@ import { UsersModule } from '../users/users.module';
   ],
   controllers: [SkillsController],
   providers: [SkillsService],
-  exports: [SkillsService],
+  exports: [SkillsService, TypeOrmModule],
 })
 export class SkillsModule {}
