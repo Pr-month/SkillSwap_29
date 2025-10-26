@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException, Inject ,BadRequestException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindManyOptions } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { appConfig } from 'src/config/app.config';
 import { IAppConfig } from 'src/config/types';
+import { UsersQueryDto } from './dto/users-query.dto';
 
 @Injectable()
 export class UsersService {
@@ -27,8 +28,17 @@ export class UsersService {
     return user;
   }
   
-  async getAllUsers(): Promise<User[]> {
-    return await this.userRepository.find();
+  async getAllUsers(query: UsersQueryDto): Promise<{ data: User[]; count: number }> {
+    const { page, limit } = query;
+    const offset = (page - 1) * limit;
+
+    const options: FindManyOptions<User> = {
+      take: limit,
+      skip: offset,
+    };
+
+    const [data, count] = await this.userRepository.findAndCount(options);
+    return { data, count };
   }
 
   async updatePassword(id:string, oldPassword: string, newPassword: string) {
