@@ -18,6 +18,7 @@ import { IAppConfig, IJwtConfig } from 'src/config/types';
 import { appConfig } from 'src/config/app.config';
 import { UserRole } from 'src/enums/roles.enum';
 import { Gender } from 'src/enums/gender.enum';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -70,7 +71,7 @@ export class AuthService {
     return { user: userSafe, ...tokens };
   }
 
-  async logout(userId: string) {
+  async logout(userId: UUID) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
 
@@ -78,7 +79,7 @@ export class AuthService {
     await this.userRepository.save(user);
   }
 
-  async refreshTokens(userId: string, refreshToken: string) {
+  async refreshTokens(userId: UUID, refreshToken: string) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user || !user.refreshToken)
       throw new UnauthorizedException('Access denied');
@@ -110,7 +111,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async updateRefreshToken(userId: string, token: string) {
+  async updateRefreshToken(userId: UUID, token: string) {
     const hashed = await bcrypt.hash(token, this.appConfig.bcryptSalt);
     await this.userRepository.update(userId, { refreshToken: hashed });
   }
