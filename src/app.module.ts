@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppService } from './app.service';
 import { appConfig } from './config/app.config';
 import { jwtConfig } from './config/jwt.config';
@@ -15,9 +16,14 @@ import { SkillsModule } from './skills/skills.module';
 import { CategoriesModule } from './categories/categories.module';
 
 import { FilesModule } from './files/files.module';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/public',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, jwtConfig, dbConfig, fileConfig],
