@@ -8,6 +8,7 @@ import { AllExceptionFilter } from '@/common/all-exception.filter';
 import { loggingConfig } from '@/logger';
 import { appConfig } from '@/config/app.config';
 import { AppModule } from './app.module';
+import { configureSwagger } from '@/config/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -33,6 +34,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Swagger
+  configureSwagger(app);
 
   // Запуск сервера
   const { port, host } = appConfig();
