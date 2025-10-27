@@ -127,7 +127,7 @@ export class SkillsService {
     await this.skillsRepository.remove(skill);
   }
 
-  async addToFavorite(userId: string, skillId: string) {
+  async addToFavorite(userId: UUID, skillId: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['favoriteSkills'],
@@ -146,7 +146,7 @@ export class SkillsService {
     return { message: 'Навык добавлен в избранное' };
   }
 
-  async removeFromFavorite(userId: string, skillId: string) {
+  async removeFromFavorite(userId: UUID, skillId: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['favoriteSkills'],

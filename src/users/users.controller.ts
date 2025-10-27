@@ -1,5 +1,4 @@
 import { Controller, Get, Param, ParseUUIDPipe, Req, UseGuards,Patch , Body} from '@nestjs/common';
-import { Controller, Get, Patch, Param, ParseUUIDPipe, Req, UseGuards, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from 'src/entities/user.entity';
 import { AuthRequest } from 'src/auth/types';

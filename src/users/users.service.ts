@@ -34,7 +34,7 @@ export class UsersService {
     return await this.userRepository.find();
   }
 
-  async updateUser(id: string, updateData: UpdateUserDto): Promise<User> {
+  async updateUser(id: UUID, updateData: UpdateUserDto): Promise<User> {
     const user = await this.userRepository.preload({
       id,
       ...updateData,

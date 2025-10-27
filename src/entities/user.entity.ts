@@ -18,9 +18,9 @@ import {
 
 import { Gender } from '../enums/gender.enum';
 import { UserRole } from '../enums/roles.enum';
-import { Skill } from '../skills/entities/skill.entity';
 import { Exclude } from 'class-transformer';
 import { UUID } from 'crypto';
+import { Skill } from './skill.entity';
 
 @Entity({
   name: 'users',
