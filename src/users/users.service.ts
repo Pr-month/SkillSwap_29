@@ -5,6 +5,7 @@ import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { appConfig } from 'src/config/app.config';
 import { IAppConfig } from 'src/config/types';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -15,7 +16,7 @@ export class UsersService {
     private readonly appConfig: IAppConfig,
   ) {}
 
-  async findOneById(id: string): Promise<User> {
+  async findOneById(id: UUID): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
     });
@@ -31,7 +32,7 @@ export class UsersService {
     return await this.userRepository.find();
   }
 
-  async updatePassword(id:string, oldPassword: string, newPassword: string) {
+  async updatePassword(id:UUID, oldPassword: string, newPassword: string) {
     const user = await this.findOneById(id);
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);

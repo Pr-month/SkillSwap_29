@@ -4,6 +4,7 @@ import { User } from 'src/entities/user.entity';
 import { AuthRequest } from 'src/auth/types';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PasswordDto } from 'src/auth/dto/password.dto';
+import { UUID } from 'crypto';
 
 @Controller('users')
 export class UsersController {
@@ -15,7 +16,7 @@ export class UsersController {
     }
 
     @Get(':id')
-    async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<User> {
+    async findOne(@Param('id', ParseUUIDPipe) id: UUID): Promise<User> {
         return this.userService.findOneById(id);
     }
 

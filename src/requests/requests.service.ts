@@ -11,6 +11,7 @@ import { User } from '../entities/user.entity';
 import { Skill } from '../entities/skill.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { RequestStatus } from '../enums/request-status.enum';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class RequestsService {
@@ -26,7 +27,7 @@ export class RequestsService {
   // Создание заявки
   async create(
     createRequestDto: CreateRequestDto,
-    userId: string,
+    userId: UUID,
   ): Promise<Request> {
     const { receiverId, offeredSkillId, requestedSkillId } = createRequestDto;
 
@@ -87,7 +88,7 @@ export class RequestsService {
   }
 
   // Получение входящих заявок
-  async findIncomingRequests(userId: string): Promise<Request[]> {
+  async findIncomingRequests(userId: UUID): Promise<Request[]> {
     return this.requestRepository.find({
       where: {
         receiver: { id: userId },
@@ -99,7 +100,7 @@ export class RequestsService {
   }
 
   // Получение исходящих заявок
-  async findOutgoingRequests(userId: string): Promise<Request[]> {
+  async findOutgoingRequests(userId: UUID): Promise<Request[]> {
     return this.requestRepository.find({
       where: {
         sender: { id: userId },
@@ -111,7 +112,7 @@ export class RequestsService {
   }
 
   // Пометка заявки как прочитанная
-  async markAsRead(id: string, userId: string): Promise<Request> {
+  async markAsRead(id: string, userId: UUID): Promise<Request> {
     const request = await this.findOne(id);
 
     if (request.receiver.id !== userId) {
@@ -128,7 +129,7 @@ export class RequestsService {
   async updateStatus(
     id: string,
     status: RequestStatus,
-    userId: string,
+    userId: UUID,
   ): Promise<Request> {
     const request = await this.findOne(id);
 
@@ -157,7 +158,7 @@ export class RequestsService {
   // Удаление заявки
   async remove(
     id: string,
-    userId: string,
+    userId: UUID,
     isAdmin: boolean = false,
   ): Promise<void> {
     const request = await this.findOne(id);
