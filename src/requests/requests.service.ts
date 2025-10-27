@@ -32,11 +32,10 @@ export class RequestsService {
     createRequestDto: CreateRequestDto,
     userId: UUID,
   ): Promise<Request> {
-    const { receiverId, offeredSkillId, requestedSkillId } = createRequestDto;
+    const { offeredSkillId, requestedSkillId } = createRequestDto;
 
-    // Проверяем существование пользователей и навыков
-    const [receiver, offeredSkill, requestedSkill] = await Promise.all([
-      this.userRepository.findOne({ where: { id: receiverId } }),
+    // Проверяем существование навыков и их владельцев
+    const [offeredSkill, requestedSkill] = await Promise.all([
       this.skillRepository.findOne({
         where: { id: offeredSkillId },
         relations: ['owner'],
@@ -47,9 +46,11 @@ export class RequestsService {
       }),
     ]);
 
-    if (!receiver || !offeredSkill || !requestedSkill) {
+    if (!offeredSkill || !requestedSkill || !requestedSkill.owner) {
       throw new NotFoundException('Пользователь или навык не найден');
     }
+
+    const receiverId = requestedSkill.owner.id;
 
     if (offeredSkill.owner.id !== userId) {
       throw new ForbiddenException(
@@ -57,10 +58,9 @@ export class RequestsService {
       );
     }
 
-    if (requestedSkill.owner.id !== receiverId) {
-      throw new BadRequestException(
-        'Запрашиваемый навык не принадлежит получателю',
-      );
+    // Запрет самозаявок
+    if (receiverId === userId) {
+      throw new BadRequestException('Нельзя отправить заявку самому себе');
     }
 
     // Проверяем существование активной заявки

@@ -1,21 +1,12 @@
-import { UUID } from 'crypto';
-import { RequestStatus } from '../../enums/request-status.enum';
-import { IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsUUID } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateRequestDto {
-  @IsUUID()
-  receiverId: UUID;
-
+  @ApiProperty({ example: '11111111-1111-1111-1111-111111111111' })
   @IsUUID()
   offeredSkillId: string;
 
+  @ApiProperty({ example: '22222222-2222-2222-2222-222222222222' })
   @IsUUID()
   requestedSkillId: string;
-
-  @IsOptional()
-  @IsEnum(RequestStatus, { message: 'Некорректный статус заявки' })
-  status?: RequestStatus;
-
-  @IsOptional()
-  isRead?: boolean;
 }
