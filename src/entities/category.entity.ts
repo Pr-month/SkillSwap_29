@@ -1,18 +1,18 @@
-import { Skill } from '../skills/entities/skill.entity';
-import {  
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
+import { Skill } from './skill.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
   OneToMany,
-  JoinColumn
+  JoinColumn,
 } from 'typeorm';
-import { 
-  IsUUID, 
-  IsString, 
-  MinLength, 
-  MaxLength, 
-  IsOptional 
+import {
+  IsUUID,
+  IsString,
+  MinLength,
+  MaxLength,
+  IsOptional,
 } from 'class-validator';
 
 @Entity({ name: 'categories' })
@@ -23,7 +23,7 @@ export class Category {
 
   @Column({
     type: 'varchar',
-    nullable: false
+    nullable: false,
   })
   @IsString()
   @MinLength(2)
@@ -32,21 +32,21 @@ export class Category {
 
   @Column({
     type: 'uuid',
-    nullable: true
+    nullable: true,
   })
   @IsUUID()
   @IsOptional()
   parentId: string;
 
-  @ManyToOne(() => Category, category => category.children, {
-    onDelete: 'CASCADE'
+  @ManyToOne(() => Category, (category) => category.children, {
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'parentId' })
   parent: Category;
 
-  @OneToMany(() => Category, category => category.parent)
+  @OneToMany(() => Category, (category) => category.parent)
   children: Category[];
 
-  @OneToMany(() => Skill, skill => skill.category)
+  @OneToMany(() => Skill, (skill) => skill.category)
   skills: Skill[];
 }

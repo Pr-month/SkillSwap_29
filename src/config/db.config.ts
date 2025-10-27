@@ -12,7 +12,7 @@ export const dbConfig = registerAs(
     password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_NAME || 'skillswap',
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    migrations: ['dist/migration/**/*{.js,.ts}'],
+    migrations: ['src/migration/**/*{.js,.ts}'],
     synchronize: process.env.NODE_ENV !== 'production',
   }),
 );

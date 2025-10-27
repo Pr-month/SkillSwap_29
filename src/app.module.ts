@@ -17,6 +17,7 @@ import { CategoriesModule } from './categories/categories.module';
 
 import { FilesModule } from './files/files.module';
 import { join } from 'path';
+import { RequestsModule } from './requests/requests.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { join } from 'path';
     SkillsModule,
     CategoriesModule,
     FilesModule,
+    RequestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
