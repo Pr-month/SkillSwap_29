@@ -5,12 +5,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, In } from 'typeorm';
-import { Request } from '../entities/request.entity';
-import { User } from '../entities/user.entity';
-import { Skill } from '../entities/skill.entity';
+import { Repository, Not, In, DataSource } from 'typeorm';
+import { NotificationsGateway } from '@/notifications/notifications.gateway';
+import { Request } from '@/entities/request.entity';
+import { User } from '@/entities/user.entity';
+import { Skill } from '@/entities/skill.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { RequestStatus } from '../enums/request-status.enum';
+import { RequestStatus } from '@/enums/request-status.enum';
 import { UUID } from 'crypto';
 
 @Injectable()
@@ -22,6 +23,8 @@ export class RequestsService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Skill)
     private readonly skillRepository: Repository<Skill>,
+    private readonly notificationsGateway: NotificationsGateway,
+    private readonly dataSource: DataSource,
   ) {}
 
   // Создание заявки
@@ -84,7 +87,26 @@ export class RequestsService {
       isRead: false,
     });
 
-    return this.requestRepository.save(request);
+    const savedRequest = await this.requestRepository.save(request);
+
+    // Получаем имя отправителя для уведомления
+    const sender = await this.userRepository.findOneBy({ id: userId });
+    if (!sender) {
+      throw new NotFoundException('Отправитель не найден');
+    }
+    // --- ОТПРАВКА УВЕДОМЛЕНИЯ О НОВОЙ ЗАЯВКЕ ---
+    this.notificationsGateway.notifyUser(receiverId, {
+      type: 'NEW_REQUEST',
+      message: `Поступила новая заявка от пользователя ${sender.name}`,
+      requestId: savedRequest.id,
+      fromUser: {
+        id: sender.id,
+        name: sender.name,
+      },
+    });
+    // --- КОНЕЦ ОТПРАВКИ ---
+
+    return savedRequest;
   }
 
   // Получение входящих заявок
@@ -131,7 +153,14 @@ export class RequestsService {
     status: RequestStatus,
     userId: UUID,
   ): Promise<Request> {
-    const request = await this.findOne(id);
+    const request = await this.requestRepository.findOne({
+      where: { id },
+      relations: ['sender', 'receiver'],
+    });
+
+    if (!request) {
+      throw new NotFoundException('Заявка не найдена');
+    }
 
     if (request.receiver.id !== userId) {
       throw new ForbiddenException(
@@ -153,7 +182,27 @@ export class RequestsService {
       await this.exchangeSkills(request);
     }
 
-    return this.requestRepository.save(request);
+    const updatedRequest = await this.requestRepository.save(request);
+
+    // --- ОТПРАВКА УВЕДОМЛЕНИЯ ОБ ИЗМЕНЕНИИ СТАТУСА ---
+    if (status === RequestStatus.ACCEPTED) {
+      this.notificationsGateway.notifyUser(request.sender.id, {
+        type: 'REQUEST_ACCEPTED',
+        message: `Ваша заявка пользователю ${request.receiver.name} была принята.`,
+        requestId: updatedRequest.id,
+        fromUser: { id: request.receiver.id, name: request.receiver.name },
+      });
+    } else if (status === RequestStatus.REJECTED) {
+      this.notificationsGateway.notifyUser(request.sender.id, {
+        type: 'REQUEST_REJECTED',
+        message: `Ваша заявка пользователю ${request.receiver.name} была отклонена.`,
+        requestId: updatedRequest.id,
+        fromUser: { id: request.receiver.id, name: request.receiver.name },
+      });
+    }
+    // --- КОНЕЦ ОТПРАВКИ ---
+
+    return updatedRequest;
   }
   // Удаление заявки
   async remove(
@@ -184,49 +233,54 @@ export class RequestsService {
   }
   // Обмен навыков
   private async exchangeSkills(request: Request): Promise<void> {
-    const { sender, receiver, offeredSkill, requestedSkill } = request;
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const senderRepo = transactionalEntityManager.getRepository(User);
+      const skillRepo = transactionalEntityManager.getRepository(Skill);
+      const requestRepo = transactionalEntityManager.getRepository(Request);
 
-    // Получаем полные данные о пользователях
-    const [senderUser, receiverUser] = await Promise.all([
-      this.userRepository.findOne({
-        where: { id: sender.id },
+      const sender = await senderRepo.findOne({
+        where: { id: request.sender.id },
         relations: ['skills'],
-      }),
-      this.userRepository.findOne({
-        where: { id: receiver.id },
+      });
+      const receiver = await senderRepo.findOne({
+        where: { id: request.receiver.id },
         relations: ['skills'],
-      }),
-    ]);
+      });
+      const offeredSkill = await skillRepo.findOneBy({
+        id: request.offeredSkill.id,
+      });
+      const requestedSkill = await skillRepo.findOneBy({
+        id: request.requestedSkill.id,
+      });
 
-    if (!senderUser || !receiverUser) {
-      throw new NotFoundException('Пользователь не найден');
-    }
+      if (!sender || !receiver || !offeredSkill || !requestedSkill) {
+        throw new NotFoundException(
+          'Один из участников обмена или навыков не найден',
+        );
+      }
 
-    // Проверяем, что у пользователей еще нет этих навыков
-    const senderHasSkill = senderUser.skills.some(
-      (skill) => skill.id === requestedSkill.id,
-    );
-    const receiverHasSkill = receiverUser.skills.some(
-      (skill) => skill.id === offeredSkill.id,
-    );
+      // Добавляем навыки, если их еще нет
+      const senderHasSkill = sender.skills.some(
+        (s) => s.id === requestedSkill.id,
+      );
+      if (!senderHasSkill) {
+        sender.skills.push(requestedSkill);
+      }
 
-    if (!senderHasSkill) {
-      senderUser.skills = [...(senderUser.skills || []), requestedSkill];
-    }
+      const receiverHasSkill = receiver.skills.some(
+        (s) => s.id === offeredSkill.id,
+      );
+      if (!receiverHasSkill) {
+        receiver.skills.push(offeredSkill);
+      }
 
-    if (!receiverHasSkill) {
-      receiverUser.skills = [...(receiverUser.skills || []), offeredSkill];
-    }
+      // Обновляем статус заявки
+      request.status = RequestStatus.DONE;
+      request.isRead = false;
 
-    // Обновляем статус заявки на DONE
-    request.status = RequestStatus.DONE;
-    request.isRead = false;
-
-    // Сохраняем изменения
-    await Promise.all([
-      this.userRepository.save(senderUser),
-      this.userRepository.save(receiverUser),
-      this.requestRepository.save(request),
-    ]);
+      await senderRepo.save(sender);
+      await senderRepo.save(receiver);
+      await requestRepo.save(request);
+    });
   }
 }
