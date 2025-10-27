@@ -15,6 +15,7 @@ import { SkillsModule } from './skills/skills.module';
 import { CategoriesModule } from './categories/categories.module';
 
 import { FilesModule } from './files/files.module';
+import { RequestsModule } from './requests/requests.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { FilesModule } from './files/files.module';
     SkillsModule,
     CategoriesModule,
     FilesModule,
+    RequestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

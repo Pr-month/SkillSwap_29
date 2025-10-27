@@ -2,6 +2,7 @@ import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
+  HttpException,
   HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -53,7 +54,14 @@ export class AllExceptionFilter implements ExceptionFilter {
         timestamp: new Date().toISOString(),
       });
     }
-
+    if (exception instanceof HttpException) {
+      return response.status(exception.getStatus()).json({
+        statusCode: exception.getStatus(),
+        message: exception.message,
+        error: exception.name,
+        timestamp: new Date().toISOString(),
+      })
+    }
     return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: 'Внутренняя ошибка сервера',
