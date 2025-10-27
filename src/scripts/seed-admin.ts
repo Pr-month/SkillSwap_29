@@ -1,9 +1,9 @@
-import { User } from '../entities/user.entity';
-import { Gender } from '../enums/gender.enum';
-import { AppDataSource } from '../config/ormconfig';
-import { UserRole } from '../enums/roles.enum';
+import { User } from '@/entities/user.entity';
+import { AppDataSource } from '@/config/ormconfig';
+import { appConfig } from '@/config/app.config';
+import { UserRole } from '@/enums/roles.enum';
+import { Gender } from '@/enums/gender.enum';
 import * as bcrypt from 'bcrypt';
-import { appConfig } from '../config/app.config';
 import * as dotenv from 'dotenv';
 
 // Загружаем переменные окружения из .env файла

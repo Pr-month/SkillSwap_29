@@ -1,8 +1,8 @@
-import { AppDataSource } from '../config/ormconfig';
-import { Skill } from '../entities/skill.entity';
-import { Category } from '../entities/category.entity';
-import { User } from '../entities/user.entity';
-import { UserRole } from '../enums/roles.enum';
+import { AppDataSource } from '@/config/ormconfig';
+import { Skill } from '@/entities/skill.entity';
+import { Category } from '@/entities/category.entity';
+import { User } from '@/entities/user.entity';
+import { UserRole } from '@/enums/roles.enum';
 import { skillsData } from './seed-skills.data';
 
 async function seedSkills() {

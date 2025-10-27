@@ -1,9 +1,9 @@
-import { User } from '../entities/user.entity';
-import { Gender } from '../enums/gender.enum';
-import { AppDataSource } from '../config/ormconfig';
-import { UserRole } from '../enums/roles.enum';
+import { User } from '@/entities/user.entity';
+import { Gender } from '@/enums/gender.enum';
+import { AppDataSource } from '@/config/ormconfig';
+import { UserRole } from '@/enums/roles.enum';
 import * as bcrypt from 'bcrypt';
-import { appConfig } from '../config/app.config';
+import { appConfig } from '@/config/app.config';
 
 // Этот скрипт предназначен для заполнения базы тестовыми пользователями
 // Используется только в целях разработки и тестирования

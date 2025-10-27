@@ -1,5 +1,5 @@
-import { AppDataSource } from '../config/ormconfig';
-import { Category } from '../entities/category.entity';
+import { AppDataSource } from '@/config/ormconfig';
+import { Category } from '@/entities/category.entity';
 import { categoriesData } from './seed-categories.data';
 
 async function seedCategories() {
