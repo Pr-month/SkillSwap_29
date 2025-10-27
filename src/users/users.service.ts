@@ -1,17 +1,18 @@
 import {
+  BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
-  Inject,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Skill } from 'src/entities/skill.entity';
 import { User } from 'src/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
-import { appConfig } from 'src/config/app.config';
 import { IAppConfig } from 'src/config/types';
 import { UUID } from 'crypto';
+import { appConfig } from '@/config/app.config';
 
 @Injectable()
 export class UsersService {
@@ -23,13 +24,23 @@ export class UsersService {
   ) {}
 
   async findOneById(id: UUID): Promise<User> {
+    // Загружаем пользователя с избранными навыками (ManyToMany)
     const user = await this.userRepository.findOne({
       where: { id },
+      relations: ['favoriteSkills'],
     });
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+
+    // Отдельно подтягиваем навыки, которыми владеет пользователь (Skill.owner)
+    const skillsRepo = this.userRepository.manager.getRepository(Skill);
+
+    user.skills = await skillsRepo.find({
+      where: { owner: { id } },
+      relations: ['category'],
+    });
 
     return user;
   }
