@@ -79,7 +79,10 @@ export class SkillsService {
       owner: { id: userId },
       category: { id: createSkillDto.category },
     });
-    return this.skillsRepository.save(skill);
+
+    const save = await this.skillsRepository.save(skill);
+
+    return this.findOne(save.id);
   }
 
   async update(
