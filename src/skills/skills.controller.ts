@@ -8,6 +8,7 @@ import {
   UseGuards,
   Req,
   Query,
+  Patch,
   ParseIntPipe,
   ParseUUIDPipe,
 } from '@nestjs/common';
@@ -38,7 +39,7 @@ export class SkillsController {
     return this.skillsService.create(createSkillDto, req.user.sub);
   }
 
-  @Post(':id')
+  @Patch(':id')
   @UseGuards(JwtAuthGuard)
   update(
     @Param('id') id: string,
