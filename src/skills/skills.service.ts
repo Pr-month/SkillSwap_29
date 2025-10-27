@@ -3,9 +3,16 @@ import {
   NotFoundException,
   ForbiddenException,
   Logger,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindManyOptions, Like, FindOptionsWhere, Equal } from 'typeorm';
+import {
+  Repository,
+  FindManyOptions,
+  Like,
+  FindOptionsWhere,
+  Equal,
+} from 'typeorm';
 import { Skill } from './entities/skill.entity';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
@@ -14,6 +21,7 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { FindSkillsQueryDto } from './dto/find-skills.dto';
 import { Category } from '../entities/category.entity';
 import { UUID } from 'crypto';
+import { User } from '../entities/user.entity';
 
 @Injectable()
 export class SkillsService {
@@ -22,7 +30,9 @@ export class SkillsService {
   constructor(
     @InjectRepository(Skill)
     private skillsRepository: Repository<Skill>,
-  ) { }
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
 
   async findAll(
     query: FindSkillsQueryDto,
@@ -31,7 +41,6 @@ export class SkillsService {
     const offset = (page - 1) * limit;
 
     const where: FindOptionsWhere<Skill> = {};
-
 
     if (category) {
       where.category = Equal(category);
@@ -68,7 +77,7 @@ export class SkillsService {
     const skill = this.skillsRepository.create({
       ...createSkillDto,
       owner: { id: userId },
-      category: { id: createSkillDto.category }
+      category: { id: createSkillDto.category },
     });
     return this.skillsRepository.save(skill);
   }
@@ -113,5 +122,45 @@ export class SkillsService {
     );
 
     await this.skillsRepository.remove(skill);
+  }
+
+  async addToFavorite(userId: string, skillId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['favoriteSkills'],
+    });
+
+    if (!user) throw new NotFoundException('Пользователь не найден');
+
+    const skill = await this.skillsRepository.findOneBy({ id: skillId });
+    if (!skill) throw new NotFoundException('Навык не найден');
+
+    const alreadyFavorite = user.favoriteSkills?.some((s) => s.id === skillId);
+    if (alreadyFavorite) throw new ConflictException('Навык уже в избранном');
+
+    user.favoriteSkills = [...(user.favoriteSkills || []), skill];
+    await this.userRepository.save(user);
+    return { message: 'Навык добавлен в избранное' };
+  }
+
+  async removeFromFavorite(userId: string, skillId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['favoriteSkills'],
+    });
+
+    if (!user) throw new NotFoundException('Пользователь не найден');
+
+    const updateFavorites = (user.favoriteSkills || []).filter(
+      (s) => s.id !== skillId,
+    );
+    if (updateFavorites.length === user.favoriteSkills?.length) {
+      throw new NotFoundException('Навык не найден в избранном');
+    }
+
+    user.favoriteSkills = updateFavorites;
+    await this.userRepository.save(user);
+
+    return { message: 'Навык удален из избранного' };
   }
 }
