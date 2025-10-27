@@ -20,6 +20,7 @@ import { Gender } from '../enums/gender.enum';
 import { UserRole } from '../enums/roles.enum';
 import { Skill } from '../skills/entities/skill.entity';
 import { Exclude } from 'class-transformer';
+import { UUID } from 'crypto';
 
 @Entity({
   name: 'users',
@@ -27,7 +28,7 @@ import { Exclude } from 'class-transformer';
 export class User {
   @PrimaryGeneratedColumn('uuid')
   @IsUUID()
-  id: string;
+  id: UUID;
 
   @Column({
     type: 'varchar',

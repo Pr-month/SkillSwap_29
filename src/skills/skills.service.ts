@@ -20,6 +20,7 @@ import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { FindSkillsQueryDto } from './dto/find-skills.dto';
 import { Category } from '../entities/category.entity';
+import { UUID } from 'crypto';
 import { User } from '../entities/user.entity';
 
 @Injectable()
@@ -72,7 +73,7 @@ export class SkillsService {
     return skill;
   }
 
-  async create(createSkillDto: CreateSkillDto, userId: string): Promise<Skill> {
+  async create(createSkillDto: CreateSkillDto, userId: UUID): Promise<Skill> {
     const skill = this.skillsRepository.create({
       ...createSkillDto,
       owner: { id: userId },
@@ -84,7 +85,7 @@ export class SkillsService {
   async update(
     id: string,
     updateSkillDto: UpdateSkillDto,
-    userId: string,
+    userId: UUID,
   ): Promise<Skill> {
     const skill = await this.findOne(id);
 
@@ -105,7 +106,7 @@ export class SkillsService {
     return this.skillsRepository.save(updatedSkill);
   }
 
-  async remove(id: string, userId: string): Promise<void> {
+  async remove(id: string, userId: UUID): Promise<void> {
     const skill = await this.findOne(id);
 
     if (skill.owner.id !== userId) {
