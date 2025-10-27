@@ -8,6 +8,7 @@ import {
   UseGuards,
   Req,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
@@ -36,7 +37,7 @@ export class SkillsController {
     return this.skillsService.create(createSkillDto, req.user.sub);
   }
 
-  @Post(':id')
+  @Patch(':id')
   @UseGuards(JwtAuthGuard)
   update(
     @Param('id') id: string,
