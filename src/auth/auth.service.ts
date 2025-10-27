@@ -11,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User } from '../entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto'; 
+import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './types';
 import { jwtConfig } from 'src/config/jwt.config';
 import { IAppConfig, IJwtConfig } from 'src/config/types';
@@ -38,7 +38,10 @@ export class AuthService {
     });
     if (existing) throw new ConflictException('Email already exists');
 
-    const hashedPassword = await bcrypt.hash(dto.password, this.appConfig.bcryptSalt);
+    const hashedPassword = await bcrypt.hash(
+      dto.password,
+      this.appConfig.bcryptSalt,
+    );
 
     const user = this.userRepository.create({
       ...dto,
@@ -94,8 +97,12 @@ export class AuthService {
   }
 
   async generateTokens(user: User) {
-    const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
-    
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
     // @ts-ignore: TypeScript ругается на accessExpiresIn, но значение корректное
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.jwtConfig.accessSecret,

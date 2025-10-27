@@ -12,7 +12,7 @@ export class UpdateSkillDto {
 
   @IsOptional()
   @IsUUID()
-  category?: string; 
+  category?: string;
 
   @IsOptional()
   @IsArray()

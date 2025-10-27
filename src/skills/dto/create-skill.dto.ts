@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsArray, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsArray,
+  IsOptional,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateSkillDto {
   @IsString()

@@ -60,7 +60,7 @@ export class AllExceptionFilter implements ExceptionFilter {
         message: exception.message,
         error: exception.name,
         timestamp: new Date().toISOString(),
-      })
+      });
     }
     return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
