@@ -38,6 +38,12 @@ export class UsersService {
     };
 
     const [data, count] = await this.userRepository.findAndCount(options);
+    const numberPages = Math.ceil(count/limit);
+    
+    if (numberPages < page) {
+      throw new NotFoundException('Запрашиваемая страница не существует');
+    }
+    
     return { data, count };
   }
 
@@ -49,9 +55,9 @@ export class UsersService {
     if (isMatch) {
       const hashedNewPassword = await bcrypt.hash(newPassword, this.appConfig.bcryptSalt);
       await this.userRepository.update(id, { password: hashedNewPassword });
-      return {message: "Пароль успешно обновлен"};
+      return {message: 'Пароль успешно обновлен'};
     } else {
-      throw new BadRequestException(`Старый пароль не совпадает`);
+      throw new BadRequestException('Старый пароль не совпадает');
     }
   }
 }
