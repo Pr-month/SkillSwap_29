@@ -1,13 +1,9 @@
-import { User } from '@/entities/user.entity';
 import { AppDataSource } from '@/config/ormconfig';
 import { appConfig } from '@/config/app.config';
+import { User } from '@/entities/user.entity';
 import { UserRole } from '@/enums/roles.enum';
 import { Gender } from '@/enums/gender.enum';
 import * as bcrypt from 'bcrypt';
-import * as dotenv from 'dotenv';
-
-// Загружаем переменные окружения из .env файла
-dotenv.config();
 
 // Получаем данные администратора из переменных окружения
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@skillswap.com';
