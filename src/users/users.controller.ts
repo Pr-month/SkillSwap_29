@@ -1,14 +1,4 @@
 import { Controller, Get, Patch, Param, ParseUUIDPipe, Req, UseGuards, Body, Query } from '@nestjs/common';
-import {
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Req,
-  UseGuards,
-  Patch,
-  Body,
-} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from 'src/entities/user.entity';
 import { AuthRequest } from 'src/auth/types';
@@ -20,12 +10,12 @@ import { UUID } from 'crypto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) {}
+  constructor(private readonly userService: UsersService) { }
 
-    @Get()
-    async allUsers(@Query() query: UsersQueryDto) {
-        return this.userService.getAllUsers(query);
-    }
+  @Get()
+  async allUsers(@Query() query: UsersQueryDto) {
+    return this.userService.getAllUsers(query);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
