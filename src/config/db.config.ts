@@ -3,6 +3,7 @@ import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConne
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as findConfig from 'find-config';
+import { DataSource } from 'typeorm';
 
 // Загружаем переменные из нужного .env файла в зависимости от NODE_ENV
 const nodeEnv = process.env.NODE_ENV || 'development';
@@ -22,9 +23,13 @@ export const dbConfig = registerAs(
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    entities: ['src/entities/**/*.entity.ts'],
-    migrations: ['src/migrations/**/*{.ts,.js}'],
+    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+    migrations: [__dirname + '/../migrations/**/*{.ts,.js}'],
     synchronize: process.env.NODE_ENV !== 'production',
-    logging: true,
+    logging: false,
+    dropSchema: false,
   }),
 );
+
+// Создаем и экспортируем источник данных
+export const AppDataSource = new DataSource(dbConfig());
