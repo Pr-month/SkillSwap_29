@@ -117,9 +117,9 @@ export class User {
   @JoinTable({ name: 'user_skills' })
   skills: Skill[];
 
-  // @ManyToMany(() => Skill)
-  // @JoinTable({ name: 'user_want_to_learn' })
-  // wantToLearn: Skill[];
+  @ManyToMany(() => Skill)
+  @JoinTable({ name: 'user_want_to_learn' })
+  wantToLearn?: Skill[];
 
   @ManyToMany(() => Skill)
   @JoinTable({ name: 'user_favorite_skills' })
