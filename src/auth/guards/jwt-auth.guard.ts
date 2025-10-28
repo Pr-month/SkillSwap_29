@@ -1,4 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+  Inject,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConfig } from 'src/config/jwt.config';
 import { IJwtConfig } from 'src/config/types';
@@ -22,7 +28,9 @@ export class JwtAuthGuard implements CanActivate {
     if (!token) throw new UnauthorizedException('Token missing');
 
     try {
-      request.user = this.jwtService.verify(token, { secret: this.jwtConfig.accessSecret });
+      request.user = this.jwtService.verify(token, {
+        secret: this.jwtConfig.accessSecret,
+      });
       return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');

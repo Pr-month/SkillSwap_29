@@ -1,9 +1,10 @@
+import { UUID } from 'crypto';
 import { RequestStatus } from '../../enums/request-status.enum';
 import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateRequestDto {
   @IsUUID()
-  receiverId: string;
+  receiverId: UUID;
 
   @IsUUID()
   offeredSkillId: string;

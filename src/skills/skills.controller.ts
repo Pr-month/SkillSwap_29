@@ -8,6 +8,9 @@ import {
   UseGuards,
   Req,
   Query,
+  Patch,
+  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
@@ -36,7 +39,7 @@ export class SkillsController {
     return this.skillsService.create(createSkillDto, req.user.sub);
   }
 
-  @Post(':id')
+  @Patch(':id')
   @UseGuards(JwtAuthGuard)
   update(
     @Param('id') id: string,
@@ -50,5 +53,23 @@ export class SkillsController {
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string, @Req() req: AuthRequest) {
     return this.skillsService.remove(id, req.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/favorite')
+  addToFavorite(
+    @Param('id', ParseUUIDPipe) skillId: string,
+    @Req() req: AuthRequest,
+  ) {
+    return this.skillsService.addToFavorite(req.user.sub, skillId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/favorite')
+  removeFromFavorite(
+    @Param('id', ParseUUIDPipe) skillId: string,
+    @Req() req: AuthRequest,
+  ) {
+    return this.skillsService.removeFromFavorite(req.user.sub, skillId);
   }
 }

@@ -1,5 +1,4 @@
 import {
-  IsEmail,
   IsString,
   IsNotEmpty,
   MinLength,
@@ -9,23 +8,13 @@ import {
   IsDateString,
 } from 'class-validator';
 import { Gender } from '../../enums/gender.enum';
-import { UserRole } from '../../enums/roles.enum';
 
-export class RegisterDto {
+export class UpdateUserDto {
   @IsString({ message: 'Имя должно быть строкой' })
   @MinLength(2)
   @MaxLength(50)
   @IsNotEmpty()
   name: string;
-
-  @IsEmail({}, { message: 'Некорректный формат email' })
-  @IsNotEmpty({ message: 'Email обязателен' })
-  email: string;
-
-  @IsString({ message: 'Пароль должен быть строкой' })
-  @IsNotEmpty({ message: 'Пароль обязателен' })
-  @MinLength(6, { message: 'Пароль должен содержать минимум 6 символов' })
-  password: string;
 
   @IsOptional()
   @IsString()
@@ -46,8 +35,4 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   avatar?: string;
-
-  @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
 }

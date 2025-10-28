@@ -18,8 +18,9 @@ import {
 
 import { Gender } from '../enums/gender.enum';
 import { UserRole } from '../enums/roles.enum';
-import { Skill } from './skill.entity';
 import { Exclude } from 'class-transformer';
+import { UUID } from 'crypto';
+import { Skill } from './skill.entity';
 
 @Entity({
   name: 'users',
@@ -27,7 +28,7 @@ import { Exclude } from 'class-transformer';
 export class User {
   @PrimaryGeneratedColumn('uuid')
   @IsUUID()
-  id: string;
+  id: UUID;
 
   @Column({
     type: 'varchar',
@@ -120,7 +121,7 @@ export class User {
   // @JoinTable({ name: 'user_want_to_learn' })
   // wantToLearn: Skill[];
 
-  // @ManyToMany(() => Skill)
-  // @JoinTable({ name: 'user_favorite_skills' })
-  // favoriteSkills: Skill[];
+  @ManyToMany(() => Skill)
+  @JoinTable({ name: 'user_favorite_skills' })
+  favoriteSkills?: Skill[];
 }
