@@ -5,12 +5,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindManyOptions } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { appConfig } from 'src/config/app.config';
 import { IAppConfig } from 'src/config/types';
+import { UsersQueryDto } from './dto/users-query.dto';
 import { UUID } from 'crypto';
 import { Skill } from 'src/entities/skill.entity';
 import { SkillsService } from 'src/skills/skills.service';
@@ -41,6 +42,25 @@ export class UsersService {
 
     return user;
   }
+  
+  async getAllUsers(query: UsersQueryDto): Promise<{ data: User[]; count: number }> {
+    const { page, limit } = query;
+    const offset = (page - 1) * limit;
+
+    const options: FindManyOptions<User> = {
+      take: limit,
+      skip: offset,
+    };
+
+    const [data, count] = await this.userRepository.findAndCount(options);
+    const numberPages = Math.ceil(count/limit);
+    
+    if (numberPages < page) {
+      throw new NotFoundException('Запрашиваемая страница не существует');
+    }
+    
+    return { data, count };
+  }
 
   async updateUser(id: UUID, updateData: UpdateUserDto): Promise<User> {
     const user = await this.userRepository.preload({
@@ -68,7 +88,7 @@ export class UsersService {
       await this.userRepository.update(id, { password: hashedNewPassword });
       return { message: 'Пароль успешно обновлен' };
     } else {
-      throw new BadRequestException(`Старый пароль не совпадает`);
+      throw new BadRequestException('Старый пароль не совпадает');
     }
   }
 

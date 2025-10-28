@@ -1,28 +1,20 @@
-import {
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Req,
-  UseGuards,
-  Patch,
-  Body,
-} from '@nestjs/common';
+import { Controller, Get, Patch, Param, ParseUUIDPipe, Req, UseGuards, Body, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from 'src/entities/user.entity';
 import { AuthRequest } from 'src/auth/types';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PasswordDto } from 'src/auth/dto/password.dto';
+import { UsersQueryDto } from './dto/users-query.dto';
 import { UUID } from 'crypto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly userService: UsersService) { }
 
   @Get()
-  async allUsers() {
-    return this.usersService.getAllUsers();
+  async allUsers(@Query() query: UsersQueryDto) {
+    return this.userService.getAllUsers(query);
   }
 
   @UseGuards(JwtAuthGuard)
