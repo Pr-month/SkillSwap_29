@@ -166,4 +166,11 @@ export class SkillsService {
 
     return { message: 'Навык удален из избранного' };
   }
+
+  async findById(id: string): Promise<Skill | null> {
+    return this.skillsRepository.findOne({
+      where: { id },
+      relations: ['category'],
+    });
+  }
 }

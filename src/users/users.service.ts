@@ -13,6 +13,8 @@ import { appConfig } from 'src/config/app.config';
 import { IAppConfig } from 'src/config/types';
 import { UsersQueryDto } from './dto/users-query.dto';
 import { UUID } from 'crypto';
+import { Skill } from 'src/entities/skill.entity';
+import { SkillsService } from 'src/skills/skills.service';
 
 @Injectable()
 export class UsersService {
@@ -21,7 +23,13 @@ export class UsersService {
     private userRepository: Repository<User>,
     @Inject(appConfig.KEY)
     private readonly appConfig: IAppConfig,
+    @InjectRepository(Skill)
+    private readonly skillsService: SkillsService,
   ) {}
+
+  async getAllUsers(): Promise<User[]> {
+    return await this.userRepository.find();
+  }
 
   async findOneById(id: UUID): Promise<User> {
     const user = await this.userRepository.findOne({
@@ -66,6 +74,7 @@ export class UsersService {
 
     return this.userRepository.save(user);
   }
+
   async updatePassword(id: UUID, oldPassword: string, newPassword: string) {
     const user = await this.findOneById(id);
 
@@ -81,5 +90,30 @@ export class UsersService {
     } else {
       throw new BadRequestException('Старый пароль не совпадает');
     }
+  }
+
+  async getUsersBySkillCategory(skillId: string): Promise<User[]> {
+    // Получаем навык по ID
+    const skill = await this.skillsService.findById(skillId);
+
+    if (!skill) {
+      throw new Error('Навык не найден');
+    }
+
+    // Получаем категорию навыка
+    const category = skill.category;
+
+    if (!category) {
+      throw new Error('Категория навыка не найдена');
+    }
+
+    // Ищем пользователей, у которых эта категория в wantToLearn
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoin('user.wantToLearn', 'wantToLearnSkill')
+      .leftJoin('wantToLearnSkill.category', 'category')
+      .where('category.id = :categoryId', { categoryId: category.id })
+      .take(10)
+      .getMany();
   }
 }

@@ -20,12 +20,12 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMe(@Req() req: AuthRequest): Promise<User> {
-    return this.userService.findOneById(req.user.sub);
+    return this.usersService.findOneById(req.user.sub);
   }
 
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: UUID): Promise<User> {
-    return this.userService.findOneById(id);
+    return this.usersService.findOneById(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -34,7 +34,7 @@ export class UsersController {
     @Req() req: AuthRequest,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    return this.userService.updateUser(req.user.sub, updateUserDto);
+    return this.usersService.updateUser(req.user.sub, updateUserDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -43,10 +43,15 @@ export class UsersController {
     @Req() req: AuthRequest,
     @Body() updatePasswordDto: PasswordDto,
   ) {
-    return this.userService.updatePassword(
+    return this.usersService.updatePassword(
       req.user.sub,
       updatePasswordDto.currentPassword,
       updatePasswordDto.newPassword,
     );
+  }
+
+  @Get('by-skill/:id')
+  async getUsersBySkillCategory(@Param('id') skillId: string) {
+    return this.usersService.getUsersBySkillCategory(skillId);
   }
 }
