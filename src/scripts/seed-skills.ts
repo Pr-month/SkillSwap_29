@@ -1,4 +1,4 @@
-import { AppDataSource } from '@/config/ormconfig';
+import { AppDataSource } from '@/config/db.config';
 import { Skill } from '@/entities/skill.entity';
 import { Category } from '@/entities/category.entity';
 import { User } from '@/entities/user.entity';
@@ -7,6 +7,7 @@ import { skillsData } from './seed-skills.data';
 
 async function seedSkills() {
   await AppDataSource.initialize();
+  AppDataSource.setOptions({ logging: false });
   const skillRepo = AppDataSource.getRepository(Skill);
   const categoryRepo = AppDataSource.getRepository(Category);
   const userRepo = AppDataSource.getRepository(User);

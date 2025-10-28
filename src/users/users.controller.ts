@@ -15,11 +15,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { User } from 'src/entities/user.entity';
-import { AuthRequest } from 'src/auth/types';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { User } from '@/entities/user.entity';
+import { AuthRequest } from '@/auth/types';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PasswordDto } from 'src/auth/dto/password.dto';
+import { PasswordDto } from '@/auth/dto/password.dto';
 import { UUID } from 'crypto';
 
 @ApiTags('users')
@@ -56,7 +56,11 @@ export class UsersController {
   @ApiBearerAuth()
   @Patch('me')
   @ApiOperation({ summary: 'Обновить профиль текущего пользователя' })
-  @ApiResponse({ status: 200, description: 'Обновлённый пользователь', type: User })
+  @ApiResponse({
+    status: 200,
+    description: 'Обновлённый пользователь',
+    type: User,
+  })
   @ApiResponse({ status: 400, description: 'Валидационная ошибка' })
   @ApiResponse({ status: 401, description: 'Неавторизован' })
   async updateMe(

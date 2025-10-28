@@ -1,6 +1,6 @@
 import { User } from '@/entities/user.entity';
 import { Gender } from '@/enums/gender.enum';
-import { AppDataSource } from '@/config/ormconfig';
+import { AppDataSource } from '@/config/db.config';
 import { UserRole } from '@/enums/roles.enum';
 import * as bcrypt from 'bcrypt';
 import { appConfig } from '@/config/app.config';
@@ -83,6 +83,7 @@ const testUsers: UserData[] = [
 async function seedTestUsers() {
   try {
     await AppDataSource.initialize();
+    AppDataSource.setOptions({ logging: false });
     const userRepo = AppDataSource.getRepository(User);
 
     console.log('👥 Создание тестовых пользователей...');

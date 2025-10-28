@@ -1,4 +1,4 @@
-import { AppDataSource } from '@/config/ormconfig';
+import { AppDataSource } from '@/config/db.config';
 import { appConfig } from '@/config/app.config';
 import { User } from '@/entities/user.entity';
 import { UserRole } from '@/enums/roles.enum';
@@ -48,6 +48,7 @@ async function seedAdmin() {
     console.log('🔄 Начало создания администратора...');
 
     await AppDataSource.initialize();
+    AppDataSource.setOptions({ logging: false });
     const userRepo = AppDataSource.getRepository(User);
 
     // Проверяем, есть ли уже администратор в базе

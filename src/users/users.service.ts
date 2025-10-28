@@ -6,12 +6,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Skill } from 'src/entities/skill.entity';
-import { User } from 'src/entities/user.entity';
-import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
-import { IAppConfig } from 'src/config/types';
 import { UUID } from 'crypto';
+import { Skill } from '@/entities/skill.entity';
+import { User } from '@/entities/user.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { IAppConfig } from '@/config/types';
 import { appConfig } from '@/config/app.config';
 
 @Injectable()

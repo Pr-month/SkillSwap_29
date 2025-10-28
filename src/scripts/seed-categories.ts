@@ -1,9 +1,10 @@
-import { AppDataSource } from '@/config/ormconfig';
+import { AppDataSource } from '@/config/db.config';
 import { Category } from '@/entities/category.entity';
 import { categoriesData } from './seed-categories.data';
 
 async function seedCategories() {
   await AppDataSource.initialize();
+  AppDataSource.setOptions({ logging: false });
   const categoryRepo = AppDataSource.getRepository(Category);
 
   const count = await categoryRepo.count();
