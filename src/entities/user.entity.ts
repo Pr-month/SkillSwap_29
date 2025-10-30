@@ -16,18 +16,24 @@ import {
   MinLength,
 } from 'class-validator';
 
-import { Gender } from '../enums/gender.enum';
-import { UserRole } from '../enums/roles.enum';
 import { Exclude } from 'class-transformer';
 import { UUID } from 'crypto';
 import { Skill } from './skill.entity';
+import { Gender } from '@/enums/gender.enum';
+import { UserRole } from '@/enums/roles.enum';
+import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
 
+@ApiExtraModels()
 @Entity({
   name: 'users',
 })
 export class User {
   @PrimaryGeneratedColumn('uuid')
   @IsUUID()
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Уникальный идентификатор пользователя',
+  })
   id: UUID;
 
   @Column({
@@ -37,6 +43,12 @@ export class User {
   @IsString()
   @MinLength(2)
   @MaxLength(50)
+  @ApiProperty({
+    example: 'Иван Иванов',
+    description: 'Имя пользователя',
+    minLength: 2,
+    maxLength: 50,
+  })
   name: string;
 
   @Column({
@@ -45,6 +57,11 @@ export class User {
     nullable: false,
   })
   @IsEmail()
+  @ApiProperty({
+    example: 'user@example.com',
+    description: 'Email пользователя',
+    format: 'email',
+  })
   email: string;
 
   @Exclude()
@@ -62,6 +79,11 @@ export class User {
   })
   @IsOptional()
   @IsString()
+  @ApiProperty({
+    example: 'Люблю программировать и путешествовать',
+    description: 'Информация о пользователе',
+    required: false,
+  })
   about: string;
 
   @Column({
@@ -70,6 +92,11 @@ export class User {
   })
   @IsDate()
   @IsOptional()
+  @ApiProperty({
+    example: '1990-01-01',
+    description: 'Дата рождения пользователя',
+    required: false,
+  })
   birthdate: Date;
 
   @Column({
@@ -78,6 +105,11 @@ export class User {
   })
   @IsString()
   @IsOptional()
+  @ApiProperty({
+    example: 'Москва',
+    description: 'Город проживания',
+    required: false,
+  })
   city: string;
 
   @Column({
@@ -85,6 +117,12 @@ export class User {
     enum: Gender,
     default: Gender.UNKNOWN,
     nullable: false,
+  })
+  @ApiProperty({
+    enum: Gender,
+    enumName: 'Gender',
+    example: Gender.MALE,
+    description: 'Пол пользователя',
   })
   gender: Gender;
 
@@ -94,6 +132,11 @@ export class User {
   })
   @IsString()
   @IsOptional()
+  @ApiProperty({
+    example: '/uploads/avatars/avatar.jpg',
+    description: 'URL аватара пользователя',
+    required: false,
+  })
   avatar: string;
 
   @Column({

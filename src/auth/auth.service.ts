@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User } from '@/entities/user.entity';
@@ -20,6 +20,10 @@ import { appConfig } from '@/config/app.config';
 import { UserRole } from '@/enums/roles.enum';
 import { Gender } from '@/enums/gender.enum';
 import { UUID } from 'crypto';
+
+interface QueryFailedErrorWithCode extends QueryFailedError {
+  code: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -36,12 +40,6 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existing = await this.userRepository.findOne({
-      where: { email: dto.email },
-    });
-    if (existing)
-      throw new ConflictException('Пользователь с таким email уже существует');
-
     const hashedPassword = await bcrypt.hash(
       dto.password,
       this.appConfig.bcryptSalt,
@@ -53,7 +51,21 @@ export class AuthService {
       role: dto.role || UserRole.USER,
       gender: dto.gender || Gender.UNKNOWN,
     });
-    await this.userRepository.save(user);
+
+    try {
+      await this.userRepository.save(user);
+    } catch (error) {
+      // Обрабатываем ошибку дубликата email
+      if (
+        error instanceof QueryFailedError &&
+        (error as QueryFailedErrorWithCode).code === '23505'
+      ) {
+        throw new ConflictException(
+          'Пользователь с таким email уже существует',
+        );
+      }
+      throw error; // Пробрасываем другие ошибки
+    }
 
     this.logger.log(
       `Пользователь успешно зарегистрирован. ID: ${user.id}, Email: ${user.email}`,

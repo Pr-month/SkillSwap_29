@@ -16,6 +16,7 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RegisterResponseDto } from './dto/register-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { AuthRequest, RefreshRequest } from './types';
@@ -27,8 +28,19 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Регистрация нового пользователя' })
-  @ApiResponse({ status: 201, description: 'Пользователь зарегистрирован' })
-  @ApiResponse({ status: 400, description: 'Валидационная ошибка' })
+  @ApiResponse({
+    status: 201,
+    description: 'Пользователь успешно зарегистрирован',
+    type: RegisterResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Валидационная ошибка',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Пользователь с таким email уже существует',
+  })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
