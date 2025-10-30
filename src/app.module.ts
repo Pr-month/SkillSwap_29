@@ -17,7 +17,9 @@ import { appConfig } from '@/config/app.config';
 import { jwtConfig } from '@/config/jwt.config';
 import { dbConfig } from '@/config/db.config';
 import { fileConfig } from '@/config/file.config';
+import { wsConfig } from './config/ws.config';
 import { FilesModule } from '@/files/files.module';
+import { NotificationsGateway } from '@/notifications/notifications.gateway';
 
 @Module({
   imports: [
@@ -27,7 +29,7 @@ import { FilesModule } from '@/files/files.module';
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, jwtConfig, dbConfig, fileConfig],
+      load: [appConfig, jwtConfig, dbConfig, fileConfig, wsConfig],
     }),
     JwtModule.registerAsync({
       global: true,
@@ -52,6 +54,6 @@ import { FilesModule } from '@/files/files.module';
     NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, NotificationsGateway],
 })
 export class AppModule {}
