@@ -54,6 +54,18 @@ export class AllExceptionFilter implements ExceptionFilter {
         timestamp: new Date().toISOString(),
       });
     }
+    //Ошибка типа файла из fileFilter
+    if (
+      exception instanceof Error &&
+      exception.message.includes('Недопустимый тип файла')
+    ) {
+      return response.status(HttpStatus.BAD_REQUEST).json({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: exception.message,
+        error: 'Invalid File Type',
+        timestamp: new Date().toISOString(),
+      });
+    }
     if (exception instanceof HttpException) {
       return response.status(exception.getStatus()).json({
         statusCode: exception.getStatus(),

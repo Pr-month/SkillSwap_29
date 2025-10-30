@@ -35,19 +35,14 @@ export class FilesInterceptor implements NestInterceptor {
       limits: { fileSize: maxSize },
       fileFilter: (_req, file, callback) => {
         if (!allowedTypes.includes(file.mimetype)) {
-          return callback(
-            new HttpException(
-              `Недопустимый тип файла. Разрешено: ${allowedTypes.join(', ')}`,
-              HttpStatus.BAD_REQUEST,
-            ),
-            false,
-          );
+          console.warn(`Недопустимый тип файла: ${file.mimetype}`);
+          return callback(null, false);
         }
         callback(null, true);
       },
     }) as unknown as new (...args: any[]) => NestInterceptor;
 
-    // создаём экземпляр класса — ТУТ главное отличие
+    // создаём экземпляр класса
     this.multerInterceptor = new MixinInterceptorClass();
   }
 
