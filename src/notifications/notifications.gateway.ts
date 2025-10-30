@@ -6,17 +6,9 @@ import {
 } from '@nestjs/websockets';
 import { Server, WebSocket } from 'ws';
 import { Inject, Logger } from '@nestjs/common';
-import { JwtPayload } from '@/auth/types';
-import { JwtService } from '@nestjs/jwt';
-import { IJwtConfig } from '@/config/types';
-import { jwtConfig } from '@/config/jwt.config';
-import * as url from 'url';
 import { IncomingMessage } from 'http';
-
-// Расширяем стандартный интерфейс WebSocket, чтобы добавить свойство user
-interface AuthenticatedSocket extends WebSocket {
-  user: JwtPayload;
-}
+import { WsConfig, wsConfig } from '@/config/ws.config';
+import { JwtWsGuard, AuthenticatedSocket } from '@/guards/ws-jwt.guard';
 
 // Определяем структуру объекта уведомления для строгой типизации
 export interface NotificationPayload {
@@ -29,10 +21,9 @@ export interface NotificationPayload {
   };
 }
 
-@WebSocketGateway({
-  cors: {
-    origin: '*',
-  },
+@WebSocketGateway(wsConfig().notifications.port, {
+  path: wsConfig().notifications.path,
+  cors: wsConfig().notifications.cors,
 })
 export class NotificationsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -44,26 +35,21 @@ export class NotificationsGateway
   private readonly connectedClients = new Map<string, WebSocket>();
 
   constructor(
-    private readonly jwtService: JwtService,
-    @Inject(jwtConfig.KEY) private readonly jwtConf: IJwtConfig,
-  ) {}
+    private readonly jwtWsGuard: JwtWsGuard,
+    @Inject(wsConfig.KEY) private readonly wsConf: WsConfig,
+  ) {
+    this.logger.log(
+      `WebSocket Gateway инициализирован на порту: ${this.wsConf.notifications.port}`,
+    );
+  }
 
   async handleConnection(
     client: AuthenticatedSocket,
     request: IncomingMessage,
   ) {
     try {
-      const token = this.getToken(request);
-      if (!token) {
-        throw new Error('Токен аутентификации не найден');
-      }
-
-      const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
-        secret: this.jwtConf.accessSecret,
-      });
-
-      client.user = payload;
-      const userId = payload.sub;
+      await this.jwtWsGuard.verify(client, request);
+      const userId = client.user.sub;
 
       this.connectedClients.set(userId, client);
       this.logger.log(
@@ -101,26 +87,5 @@ export class NotificationsGateway
         `Попытка отправить уведомление отключенному пользователю: ${userId}`,
       );
     }
-  }
-
-  private getToken(request: IncomingMessage): string | null {
-    // Из заголовка
-    const authHeader = request.headers['authorization'];
-    if (authHeader) {
-      const parts = authHeader.split(' ');
-      if (parts.length === 2 && parts[0] === 'Bearer') {
-        return parts[1];
-      }
-    }
-
-    // Из query-параметра
-    if (request.url) {
-      const parsedUrl = url.parse(request.url, true);
-      if (parsedUrl.query && typeof parsedUrl.query.token === 'string') {
-        return parsedUrl.query.token;
-      }
-    }
-
-    return null;
   }
 }

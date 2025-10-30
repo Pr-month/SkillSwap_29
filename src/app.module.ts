@@ -19,7 +19,6 @@ import { dbConfig } from '@/config/db.config';
 import { fileConfig } from '@/config/file.config';
 import { wsConfig } from './config/ws.config';
 import { FilesModule } from '@/files/files.module';
-import { NotificationsGateway } from '@/notifications/notifications.gateway';
 
 @Module({
   imports: [
@@ -54,6 +53,6 @@ import { NotificationsGateway } from '@/notifications/notifications.gateway';
     NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, NotificationsGateway],
+  providers: [AppService],
 })
 export class AppModule {}

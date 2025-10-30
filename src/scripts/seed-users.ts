@@ -22,7 +22,7 @@ interface UserData {
 }
 
 // Тестовые пользователи для разработки и тестирования
-const testUsers: UserData[] = [
+export const testUsers: UserData[] = [
   {
     name: 'Иван Петров',
     email: 'ivan@example.com',

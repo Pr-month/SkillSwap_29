@@ -4,7 +4,7 @@ const http = require('http');
 // --- Данные для входа тестового пользователя ---
 const loginDetails = {
   email: 'ivan@example.com', // Email из seed-users.ts
-  password: 'user123',       // Пароль из seed-users.ts
+  password: 'user123', // Пароль из seed-users.ts
 };
 // ---------------------------------------------
 
@@ -41,25 +41,38 @@ async function getFreshToken() {
 
 async function testWebSocket() {
   try {
-    console.log(`[Клиент] Получение свежего токена для ${loginDetails.email}...`);
+    console.log(
+      `[Клиент] Получение свежего токена для ${loginDetails.email}...`,
+    );
     const token = await getFreshToken();
     console.log('[Клиент] Токен получен. Попытка подключения к WebSocket...');
 
-    const url = `ws://localhost:3000?token=${token}`;
+    const url = `ws://localhost:3001?token=${token}`;
     const ws = new WebSocket(url);
 
     ws.on('open', () => {
-    console.log('[Клиент] ✅ Соединение успешно установлено!');
+      console.log('[Клиент] ✅ Соединение успешно установлено!');
       ws.close(1000, 'Тест завершен');
     });
 
-    ws.on('error', (error) => console.error('[Клиент] ❌ Ошибка соединения:', error.message));
-    ws.on('close', (code, reason) => console.log(`[Клиент] Соединение закрыто. Код: ${code}, Причина: ${reason.toString()}`));
-    ws.on('unexpected-response', (req, res) => console.error(`❌ [Клиент] Неожиданный ответ от сервера. Статус: ${res.statusCode}. Вероятно, токен невалиден.`));
-
+    ws.on('error', (error) =>
+      console.error('[Клиент] ❌ Ошибка соединения:', error.message),
+    );
+    ws.on('close', (code, reason) =>
+      console.log(
+        `[Клиент] Соединение закрыто. Код: ${code}, Причина: ${reason.toString()}`,
+      ),
+    );
+    ws.on('unexpected-response', (req, res) =>
+      console.error(
+        `❌ [Клиент] Неожиданный ответ от сервера. Статус: ${res.statusCode}. Вероятно, токен невалиден.`,
+      ),
+    );
   } catch (error) {
     if (error.code === 'ECONNREFUSED') {
-      console.error('[Клиент] ❌ Не удалось выполнить тест: Невозможно подключиться к серверу. Убедитесь, что сервер запущен на порту 3000.');
+      console.error(
+        '[Клиент] ❌ Не удалось выполнить тест: Невозможно подключиться к серверу. Убедитесь, что сервер запущен на порту 3000.',
+      );
     } else {
       console.error('[Клиент] ❌ Не удалось выполнить тест:', error);
     }
