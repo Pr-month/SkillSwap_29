@@ -6,7 +6,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConfig } from 'src/config/jwt.config';
+import { jwtConfig } from '../../config/jwt.config';
 import { IJwtConfig } from 'src/config/types';
 
 @Injectable()
