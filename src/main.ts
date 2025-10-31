@@ -1,11 +1,14 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { WinstonModule } from 'nest-winston';
-import { AppModule } from './app.module';
-import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
-import { AllExceptionFilter } from './common/all-exception.filter';
-import { loggingConfig } from './logger';
+import { WsAdapter } from '@nestjs/platform-ws';
 import { Logger } from '@nestjs/common';
-import { appConfig } from './config/app.config';
+import * as express from 'express';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { AllExceptionFilter } from '@/common/all-exception.filter';
+import { loggingConfig } from '@/logger';
+import { appConfig } from '@/config/app.config';
+import { AppModule } from './app.module';
+import { configureSwagger } from '@/config/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -13,7 +16,15 @@ async function bootstrap() {
   });
   const logger = new Logger('App');
 
-  app.useGlobalFilters(new AllExceptionFilter());
+  // Middleware для парсинга JSON
+  app.use(express.json());
+
+  // Подключаем WebSocket адаптер
+  app.useWebSocketAdapter(new WsAdapter(app));
+
+  // Глобальные фильтры и интерцепторы
+  const httpAdapterHost = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AllExceptionFilter(httpAdapterHost));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   app.useGlobalPipes(
@@ -23,6 +34,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Swagger
+  configureSwagger(app);
 
   // Запуск сервера
   const { port, host } = appConfig();

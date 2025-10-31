@@ -1,35 +1,68 @@
-import { Controller, Get, Patch, Param, ParseUUIDPipe, Req, UseGuards, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Req,
+  UseGuards,
+  Patch,
+  Body,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { User } from 'src/entities/user.entity';
-import { AuthRequest } from 'src/auth/types';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { User } from '@/entities/user.entity';
+import { AuthRequest } from '@/auth/types';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PasswordDto } from 'src/auth/dto/password.dto';
-import { UsersQueryDto } from './dto/users-query.dto';
+import { PasswordDto } from '@/auth/dto/password.dto';
 import { UUID } from 'crypto';
+import { UsersQueryDto } from './dto/users-query.dto';
 
+@ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) { }
+  constructor(private readonly usersService: UsersService) { }
 
   @Get()
   async allUsers(@Query() query: UsersQueryDto) {
-    return this.userService.getAllUsers(query);
+    return this.usersService.getAllUsers(query);
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Get('me')
+  @ApiOperation({ summary: 'Получить профиль текущего пользователя' })
+  @ApiResponse({ status: 200, description: 'Профиль пользователя', type: User })
+  @ApiResponse({ status: 401, description: 'Неавторизован' })
   async getMe(@Req() req: AuthRequest): Promise<User> {
     return this.usersService.findOneById(req.user.sub);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Получить пользователя по ID' })
+  @ApiResponse({ status: 200, description: 'Пользователь', type: User })
+  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   async findOne(@Param('id', ParseUUIDPipe) id: UUID): Promise<User> {
     return this.usersService.findOneById(id);
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Patch('me')
+  @ApiOperation({ summary: 'Обновить профиль текущего пользователя' })
+  @ApiResponse({
+    status: 200,
+    description: 'Обновлённый пользователь',
+    type: User,
+  })
+  @ApiResponse({ status: 400, description: 'Валидационная ошибка' })
+  @ApiResponse({ status: 401, description: 'Неавторизован' })
   async updateMe(
     @Req() req: AuthRequest,
     @Body() updateUserDto: UpdateUserDto,
@@ -38,7 +71,12 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Patch('me/password')
+  @ApiOperation({ summary: 'Обновить пароль текущего пользователя' })
+  @ApiResponse({ status: 200, description: 'Пароль обновлён' })
+  @ApiResponse({ status: 400, description: 'Валидационная ошибка' })
+  @ApiResponse({ status: 401, description: 'Неавторизован' })
   async updatePassword(
     @Req() req: AuthRequest,
     @Body() updatePasswordDto: PasswordDto,

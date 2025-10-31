@@ -1,13 +1,9 @@
-import { User } from '../entities/user.entity';
-import { Gender } from '../enums/gender.enum';
-import { AppDataSource } from '../config/ormconfig';
-import { UserRole } from '../enums/roles.enum';
+import { AppDataSource } from '@/config/db.config';
+import { appConfig } from '@/config/app.config';
+import { User } from '@/entities/user.entity';
+import { UserRole } from '@/enums/roles.enum';
+import { Gender } from '@/enums/gender.enum';
 import * as bcrypt from 'bcrypt';
-import { appConfig } from '../config/app.config';
-import * as dotenv from 'dotenv';
-
-// Загружаем переменные окружения из .env файла
-dotenv.config();
 
 // Получаем данные администратора из переменных окружения
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@skillswap.com';
@@ -52,6 +48,7 @@ async function seedAdmin() {
     console.log('🔄 Начало создания администратора...');
 
     await AppDataSource.initialize();
+    AppDataSource.setOptions({ logging: false });
     const userRepo = AppDataSource.getRepository(User);
 
     // Проверяем, есть ли уже администратор в базе
