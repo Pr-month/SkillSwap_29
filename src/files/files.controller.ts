@@ -15,7 +15,7 @@ export class FilesController {
 
   @Post()
   @UseInterceptors(FilesInterceptor)
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new HttpException('Файл не указан', HttpStatus.BAD_REQUEST);
     }
