@@ -1,25 +1,26 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
-  UnauthorizedException,
   Inject,
+  Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConfig } from 'src/config/jwt.config';
 import { IJwtConfig } from 'src/config/types';
 import { Request } from 'express';
 import { UserPayload } from '@/auth/guards/roles.guard'; // Импортируем тип Request из express
+import { jwtConfig as jwt } from '@/config/jwt.config';
 
 export interface RequestWithUser extends Request {
   user?: UserPayload;
+  token?: string;
 }
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    @Inject(jwtConfig.KEY)
+    @Inject(jwt.KEY)
     private readonly jwtConfig: IJwtConfig,
   ) {}
 
@@ -32,11 +33,9 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync<UserPayload>(token, {
+      request.user = await this.jwtService.verifyAsync<UserPayload>(token, {
         secret: this.jwtConfig.accessSecret,
       });
-
-      request.user = payload;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
