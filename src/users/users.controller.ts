@@ -27,9 +27,30 @@ import { UsersQueryDto } from './dto/users-query.dto';
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Получить список пользователей с пагинацией' })
+  @ApiResponse({
+    status: 200,
+    description: 'Список пользователей с пагинацией',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { $ref: '#/components/schemas/User' } },
+        meta: {
+          type: 'object',
+          properties: {
+            page: { type: 'number', example: 1 },
+            limit: { type: 'number', example: 20 },
+            total: { type: 'number', example: 100 },
+            totalPages: { type: 'number', example: 5 },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Некорректные параметры запроса' })
   async allUsers(@Query() query: UsersQueryDto) {
     return this.usersService.getAllUsers(query);
   }
@@ -89,7 +110,22 @@ export class UsersController {
   }
 
   @Get('by-skill/:id')
-  async getUsersBySkillCategory(@Param('id') skillId: string) {
+  @ApiOperation({ summary: 'Получить пользователей по категории навыка' })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Список пользователей, владеющих навыком из указанной категории',
+    type: [User],
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Некорректный ID категории',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Категория не найдена',
+  })
+  async getUsersBySkillCategory(@Param('id') skillId: string): Promise<User[]> {
     return this.usersService.getUsersBySkillCategory(skillId);
   }
 }

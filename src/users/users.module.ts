@@ -11,4 +11,4 @@ import { Skill } from '@/entities/skill.entity';
   providers: [UsersService],
   exports: [UsersService, TypeOrmModule],
 })
-export class UsersModule { }
+export class UsersModule {}
