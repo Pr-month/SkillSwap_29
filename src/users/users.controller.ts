@@ -25,13 +25,11 @@ import { UUID } from 'crypto';
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) {}
+  constructor(private readonly userService: UsersService) { }
 
   @Get()
-  @ApiOperation({ summary: 'Получить список пользователей' })
-  @ApiResponse({ status: 200, description: 'Список пользователей получен' })
-  async allUsers() {
-    return this.userService.getAllUsers();
+  async allUsers(@Query() query: UsersQueryDto) {
+    return this.userService.getAllUsers(query);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -41,7 +39,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Профиль пользователя', type: User })
   @ApiResponse({ status: 401, description: 'Неавторизован' })
   async getMe(@Req() req: AuthRequest): Promise<User> {
-    return this.userService.findOneById(req.user.sub);
+    return this.usersService.findOneById(req.user.sub);
   }
 
   @Get(':id')
@@ -49,7 +47,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Пользователь', type: User })
   @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   async findOne(@Param('id', ParseUUIDPipe) id: UUID): Promise<User> {
-    return this.userService.findOneById(id);
+    return this.usersService.findOneById(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -67,7 +65,7 @@ export class UsersController {
     @Req() req: AuthRequest,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    return this.userService.updateUser(req.user.sub, updateUserDto);
+    return this.usersService.updateUser(req.user.sub, updateUserDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -81,10 +79,15 @@ export class UsersController {
     @Req() req: AuthRequest,
     @Body() updatePasswordDto: PasswordDto,
   ) {
-    return this.userService.updatePassword(
+    return this.usersService.updatePassword(
       req.user.sub,
       updatePasswordDto.currentPassword,
       updatePasswordDto.newPassword,
     );
+  }
+
+  @Get('by-skill/:id')
+  async getUsersBySkillCategory(@Param('id') skillId: string) {
+    return this.usersService.getUsersBySkillCategory(skillId);
   }
 }
