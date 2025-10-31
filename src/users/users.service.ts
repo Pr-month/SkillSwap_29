@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UUID } from 'crypto';
 import { Skill } from '@/entities/skill.entity';
@@ -13,6 +13,8 @@ import { User } from '@/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { IAppConfig } from '@/config/types';
 import { appConfig } from '@/config/app.config';
+import { SkillsService } from '@/skills/skills.service';
+import { UsersQueryDto } from './dto/users-query.dto';
 
 @Injectable()
 export class UsersService {
@@ -23,11 +25,7 @@ export class UsersService {
     private readonly appConfig: IAppConfig,
     @InjectRepository(Skill)
     private readonly skillsService: SkillsService,
-  ) {}
-
-  async getAllUsers(): Promise<User[]> {
-    return await this.userRepository.find();
-  }
+  ) { }
 
   async findOneById(id: UUID): Promise<User> {
     // Загружаем пользователя с избранными навыками (ManyToMany)
@@ -50,7 +48,7 @@ export class UsersService {
 
     return user;
   }
-  
+
   async getAllUsers(query: UsersQueryDto): Promise<{ data: User[]; count: number }> {
     const { page, limit } = query;
     const offset = (page - 1) * limit;
@@ -61,12 +59,12 @@ export class UsersService {
     };
 
     const [data, count] = await this.userRepository.findAndCount(options);
-    const numberPages = Math.ceil(count/limit);
-    
+    const numberPages = Math.ceil(count / limit);
+
     if (numberPages < page) {
       throw new NotFoundException('Запрашиваемая страница не существует');
     }
-    
+
     return { data, count };
   }
 

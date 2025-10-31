@@ -7,6 +7,7 @@ import {
   UseGuards,
   Patch,
   Body,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -21,15 +22,16 @@ import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PasswordDto } from '@/auth/dto/password.dto';
 import { UUID } from 'crypto';
+import { UsersQueryDto } from './dto/users-query.dto';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) { }
+  constructor(private readonly usersService: UsersService) { }
 
   @Get()
   async allUsers(@Query() query: UsersQueryDto) {
-    return this.userService.getAllUsers(query);
+    return this.usersService.getAllUsers(query);
   }
 
   @UseGuards(JwtAuthGuard)
