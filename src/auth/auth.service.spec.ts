@@ -14,7 +14,7 @@ import { QueryFailedError } from 'typeorm';
 
 jest.mock('bcrypt');
 
-describe('AuthService', () => {
+describe('AuthService (unit)', () => {
   let service: AuthService;
   let userRepo: any;
   let jwtService: JwtService;
@@ -149,23 +149,6 @@ describe('AuthService', () => {
     });
   });
 
-  describe('logout', () => {
-    it('Успешно очищает refreshToken.', async () => {
-      mockUserRepo.findOne.mockResolvedValue(mockUser);
-      mockUserRepo.save.mockResolvedValue(mockUser);
-
-      await service.logout(mockUser.id as any);
-
-      expect(mockUserRepo.findOne).toHaveBeenCalledWith({ where: { id: mockUser.id } });
-      expect(mockUserRepo.save).toHaveBeenCalledWith(expect.objectContaining({ refreshToken: '' }));
-    });
-
-    it('Выбрасывает BadRequestException если пользователь не найден.', async () => {
-      mockUserRepo.findOne.mockResolvedValue(null);
-      await expect(service.logout('bad-id' as any)).rejects.toThrow(BadRequestException);
-    });
-  });
-
   describe('refreshTokens', () => {
     it('Успешно обновляет токены при валидном refreshToken.', async () => {
       mockUserRepo.findOne.mockResolvedValue({ ...mockUser, refreshToken: 'storedHash' });
@@ -187,6 +170,23 @@ describe('AuthService', () => {
       await expect(
         service.refreshTokens(mockUser.id as any, 'invalid'),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('logout', () => {
+    it('Успешно очищает refreshToken.', async () => {
+      mockUserRepo.findOne.mockResolvedValue(mockUser);
+      mockUserRepo.save.mockResolvedValue(mockUser);
+
+      await service.logout(mockUser.id as any);
+
+      expect(mockUserRepo.findOne).toHaveBeenCalledWith({ where: { id: mockUser.id } });
+      expect(mockUserRepo.save).toHaveBeenCalledWith(expect.objectContaining({ refreshToken: '' }));
+    });
+
+    it('Выбрасывает BadRequestException если пользователь не найден.', async () => {
+      mockUserRepo.findOne.mockResolvedValue(null);
+      await expect(service.logout('bad-id' as any)).rejects.toThrow(BadRequestException);
     });
   });
 });
