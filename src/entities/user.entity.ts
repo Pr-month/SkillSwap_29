@@ -145,6 +145,11 @@ export class User {
     default: UserRole.USER,
     nullable: false,
   })
+  @ApiProperty({
+    enum: UserRole,
+    example: UserRole.USER,
+    description: 'Роль пользователя в системе',
+  })
   role: UserRole;
 
   @Exclude()
@@ -156,14 +161,31 @@ export class User {
   @IsOptional()
   refreshToken: string;
 
+  @ApiProperty({
+    type: () => [Skill],
+    description: 'Навыки, которыми владеет пользователь',
+    isArray: true,
+  })
   @ManyToMany(() => Skill)
   @JoinTable({ name: 'user_skills' })
   skills: Skill[];
 
+  @ApiProperty({
+    type: () => [Skill],
+    description: 'Навыки, которые пользователь хочет изучить',
+    isArray: true,
+    required: false,
+  })
   @ManyToMany(() => Skill)
   @JoinTable({ name: 'user_want_to_learn' })
   wantToLearn?: Skill[];
 
+  @ApiProperty({
+    type: () => [Skill],
+    description: 'Избранные навыки пользователя',
+    isArray: true,
+    required: false,
+  })
   @ManyToMany(() => Skill)
   @JoinTable({ name: 'user_favorite_skills' })
   favoriteSkills?: Skill[];

@@ -25,7 +25,7 @@ export class UsersService {
     private readonly appConfig: IAppConfig,
     @InjectRepository(Skill)
     private readonly skillsService: SkillsService,
-  ) { }
+  ) {}
 
   async findOneById(id: UUID): Promise<User> {
     // Загружаем пользователя с избранными навыками (ManyToMany)
@@ -49,7 +49,9 @@ export class UsersService {
     return user;
   }
 
-  async getAllUsers(query: UsersQueryDto): Promise<{ data: User[]; count: number }> {
+  async getAllUsers(
+    query: UsersQueryDto,
+  ): Promise<{ data: User[]; count: number }> {
     const { page, limit } = query;
     const offset = (page - 1) * limit;
 

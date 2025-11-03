@@ -1,39 +1,49 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
-  UnauthorizedException,
   Inject,
+  Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConfig } from 'src/config/jwt.config';
 import { IJwtConfig } from 'src/config/types';
+import { Request } from 'express';
+import { UserPayload } from '@/auth/guards/roles.guard'; // Импортируем тип Request из express
+import { jwtConfig as jwt } from '@/config/jwt.config';
+
+export interface RequestWithUser extends Request {
+  user?: UserPayload;
+  token?: string;
+}
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
-    private jwtService: JwtService,
-    @Inject(jwtConfig.KEY)
+    private readonly jwtService: JwtService,
+    @Inject(jwt.KEY)
     private readonly jwtConfig: IJwtConfig,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.authorization;
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const token = this.extractTokenFromHeader(request);
 
-    if (!authHeader)
-      throw new UnauthorizedException('Authorization header missing');
-
-    const [, token] = authHeader.split(' ');
-    if (!token) throw new UnauthorizedException('Token missing');
+    if (!token) {
+      throw new UnauthorizedException('Token not found');
+    }
 
     try {
-      request.user = this.jwtService.verify(token, {
+      request.user = await this.jwtService.verifyAsync<UserPayload>(token, {
         secret: this.jwtConfig.accessSecret,
       });
-      return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
+    return true;
+  }
+
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
   }
 }
