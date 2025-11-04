@@ -16,9 +16,12 @@ export class FilesController {
   @Post()
   @UseInterceptors(FilesInterceptor)
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-   
+    
     if (!file) {
-      throw new HttpException('Файл не указан или недопустимый тип файла', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Файл не указан или недопустимый тип файла',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const publicUrl = this.filesService.getPublicFileUrl(file.filename);

@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { FilesController } from './files.controller';
 import { FilesService } from './files.service';
+import { ConfigModule } from '@nestjs/config';
+import { fileConfig } from '../config/file.config';
 
 describe('FilesController', () => {
   let controller: FilesController;
@@ -9,6 +11,7 @@ describe('FilesController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot({ isGlobal: true, load: [fileConfig] })],
       controllers: [FilesController],
       providers: [FilesService],
     }).compile();
@@ -33,7 +36,10 @@ describe('FilesController', () => {
 
   it('should throw HttpException when file is not provided', async () => {
     await expect(controller.uploadFile(undefined as any)).rejects.toThrow(
-      new HttpException('Файл не указан', HttpStatus.BAD_REQUEST),
+      new HttpException(
+        'Файл не указан или недопустимый тип файла',
+        HttpStatus.BAD_REQUEST,
+      ),
     );
   });
 });

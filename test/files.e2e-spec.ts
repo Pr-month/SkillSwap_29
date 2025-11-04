@@ -49,18 +49,18 @@ describe('FilesController (e2e)', () => {
       .post('/files')
       .expect(HttpStatus.BAD_REQUEST);
 
-    expect(response.body.message).toBe('Файл не указан');
+    expect(response.body.message).toBe('Файл не указан или недопустимый тип файла');
   });
 
   it('should reject file with invalid mime type', async () => {
     const testFilePath = join(__dirname, 'test-files', 'invalid.txt');
-    
+
     const response = await request(app.getHttpServer())
       .post('/files')
       .attach('file', testFilePath)
       .expect(HttpStatus.BAD_REQUEST);
-    
-    expect(response.body.message).toBe('Файл не указан');
+
+    expect(response.body.message).toBe('Файл не указан или недопустимый тип файла');
   });
 
   afterAll(async () => {
