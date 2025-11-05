@@ -9,15 +9,14 @@ import {
   Req,
   Query,
   Patch,
-  ParseIntPipe,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { FindSkillsQueryDto } from './dto/find-skills.dto';
-import { AuthRequest } from '../auth/types';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthRequest } from '@/auth/types';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 
 @Controller('skills')
 export class SkillsController {

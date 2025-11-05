@@ -14,6 +14,7 @@ import {
   MaxLength,
   IsOptional,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity({ name: 'categories' })
 export class Category {
@@ -38,15 +39,30 @@ export class Category {
   @IsOptional()
   parentId: string;
 
+  @ApiProperty({
+    description: 'Родительская категория',
+    type: () => Category,
+    required: false,
+  })
   @ManyToOne(() => Category, (category) => category.children, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'parentId' })
   parent: Category;
 
+  @ApiProperty({
+    description: 'Дочерние категории',
+    type: () => [Category],
+    required: false,
+  })
   @OneToMany(() => Category, (category) => category.parent)
   children: Category[];
 
+  @ApiProperty({
+    description: 'Навыки в этой категории',
+    type: () => [Skill],
+    required: false,
+  })
   @OneToMany(() => Skill, (skill) => skill.category)
   skills: Skill[];
 }

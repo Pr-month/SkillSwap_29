@@ -1,4 +1,3 @@
-import { CreateSkillDto } from './create-skill.dto';
 import { IsOptional, IsString, IsUUID, IsArray } from 'class-validator';
 
 export class UpdateSkillDto {
@@ -12,7 +11,7 @@ export class UpdateSkillDto {
 
   @IsOptional()
   @IsUUID()
-  category?: string; 
+  category?: string;
 
   @IsOptional()
   @IsArray()
