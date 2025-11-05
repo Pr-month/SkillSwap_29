@@ -49,7 +49,9 @@ describe('FilesController (e2e)', () => {
       .post('/files')
       .expect(HttpStatus.BAD_REQUEST);
 
-    expect(response.body.message).toBe('Файл не указан или недопустимый тип файла');
+    expect(response.body.message).toBe(
+      'Файл не указан или недопустимый тип файла',
+    );
   });
 
   it('should reject file with invalid mime type', async () => {
@@ -60,7 +62,9 @@ describe('FilesController (e2e)', () => {
       .attach('file', testFilePath)
       .expect(HttpStatus.BAD_REQUEST);
 
-    expect(response.body.message).toBe('Файл не указан или недопустимый тип файла');
+    expect(response.body.message).toBe(
+      'Файл не указан или недопустимый тип файла',
+    );
   });
 
   afterAll(async () => {
