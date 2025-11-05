@@ -20,5 +20,4 @@ describe('FilesInterceptor', () => {
   it('should be defined', () => {
     expect(new FilesInterceptor(mockConfigService)).toBeDefined();
   });
-
 });

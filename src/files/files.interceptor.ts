@@ -35,7 +35,6 @@ export class FilesInterceptor implements NestInterceptor {
       limits: { fileSize: maxSize },
       fileFilter: (_req, file, callback) => {
         if (!allowedTypes.includes(file.mimetype)) {
-          console.warn(`Недопустимый тип файла: ${file.mimetype}`);
           return callback(null, false);
         }
         callback(null, true);
