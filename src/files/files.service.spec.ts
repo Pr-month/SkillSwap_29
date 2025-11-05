@@ -15,4 +15,12 @@ describe('FilesService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('should return correct public file URL', () => {
+    const filename = 'example.jpg';
+    const expectedUrl = `http://localhost:3000/public/${filename}`;
+    const result = service.getPublicFileUrl(filename);
+
+    expect(result).toBe(expectedUrl);
+  });
 });

@@ -1,6 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { SkillsModule } from './skills/skills.module';
+import { CategoriesModule } from './categories/categories.module';
+import { FilesModule } from './files/files.module';
 import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
