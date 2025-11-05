@@ -5,6 +5,9 @@
     "ts"
   ],
   "rootDir": ".",
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/../src/$1"
+  },
   "moduleDirectories": [
     "<rootDir>/../",
     "node_modules"
@@ -13,5 +16,8 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "setupFilesAfterEnv": ["<rootDir>/setup-e2e.ts"],
+  "maxWorkers": 1,
+  "testTimeout": 30000
 }
