@@ -33,7 +33,7 @@ interface AuthenticatedRequest extends Request {
 
 @Catch()
 export class AllExceptionFilter implements ExceptionFilter {
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
+  constructor(private readonly httpAdapterHost: HttpAdapterHost) { }
 
   private readonly logger = new Logger(AllExceptionFilter.name);
   catch(exception: unknown, host: ArgumentsHost) {
@@ -129,12 +129,12 @@ export class AllExceptionFilter implements ExceptionFilter {
       exception instanceof Error &&
       exception.message.includes('Недопустимый тип файла')
     ) {
-      return response.status(HttpStatus.BAD_REQUEST).json({
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: exception.message,
-        error: 'Invalid File Type',
-        timestamp: new Date().toISOString(),
-      });
+      return sendErrorResponse(
+        HttpStatus.BAD_REQUEST,
+        exception.message,
+        'Invalid File Type',
+        exception,
+      );
     }
     if (exception instanceof HttpException) {
       const status = exception.getStatus();

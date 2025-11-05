@@ -9,10 +9,6 @@ import { FilesModule } from './files/files.module';
 import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from '@/users/users.module';
-import { SkillsModule } from '@/skills/skills.module';
-import { CategoriesModule } from '@/categories/categories.module';
 import { RequestsModule } from '@/requests/requests.module';
 import { NotificationsModule } from '@/notifications/notifications.module';
 import { AppController } from './app.controller';
@@ -23,7 +19,7 @@ import { jwtConfig } from '@/config/jwt.config';
 import { dbConfig } from '@/config/db.config';
 import { fileConfig } from '@/config/file.config';
 import { wsConfig } from './config/ws.config';
-import { FilesModule } from '@/files/files.module';
+
 
 @Module({
   imports: [
