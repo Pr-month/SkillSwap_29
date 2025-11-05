@@ -7,6 +7,11 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { UserRole } from 'src/enums/roles.enum';
+import { RequestWithUser } from '@/auth/guards/jwt-auth.guard';
+
+export interface UserPayload {
+  role: UserRole;
+}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -20,15 +25,16 @@ export class RolesGuard implements CanActivate {
 
     if (!requiredRoles || requiredRoles.length === 0) return true;
 
-    const { user } = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const user: UserPayload | undefined = request.user;
 
     if (!user) {
       throw new ForbiddenException('User not found in request');
     }
 
-    const hasRole = requiredRoles.includes(user.role);
+    const hasRole = () => requiredRoles.includes(user.role);
 
-    if (!hasRole) {
+    if (!hasRole()) {
       throw new ForbiddenException('Access denied: insufficient role');
     }
 

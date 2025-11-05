@@ -1,9 +1,9 @@
-import { User } from '../entities/user.entity';
-import { Gender } from '../enums/gender.enum';
-import { AppDataSource } from '../config/ormconfig';
-import { UserRole } from '../enums/roles.enum';
+import { User } from '@/entities/user.entity';
+import { Gender } from '@/enums/gender.enum';
+import { AppDataSource } from '@/config/db.config';
+import { UserRole } from '@/enums/roles.enum';
 import * as bcrypt from 'bcrypt';
-import { appConfig } from '../config/app.config';
+import { appConfig } from '@/config/app.config';
 
 // Этот скрипт предназначен для заполнения базы тестовыми пользователями
 // Используется только в целях разработки и тестирования
@@ -22,7 +22,7 @@ interface UserData {
 }
 
 // Тестовые пользователи для разработки и тестирования
-const testUsers: UserData[] = [
+export const testUsers: UserData[] = [
   {
     name: 'Иван Петров',
     email: 'ivan@example.com',
@@ -83,6 +83,7 @@ const testUsers: UserData[] = [
 async function seedTestUsers() {
   try {
     await AppDataSource.initialize();
+    AppDataSource.setOptions({ logging: false });
     const userRepo = AppDataSource.getRepository(User);
 
     console.log('👥 Создание тестовых пользователей...');

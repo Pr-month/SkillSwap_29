@@ -12,23 +12,34 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "typeorm": "ts-node --files -r tsconfig-paths/register ./node_modules/typeorm/cli.js --dataSource src/config/ormconfig.ts",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
     "migrate:generate": "npm run typeorm -- migration:generate src/migrations/migration",
     "migrate:create": "npm run typeorm -- migration:create src/migrations/migration",
-    "migrate:up": "npm run typeorm -- migration:run",
-    "migrate:down": "npm run typeorm -- migration:revert",
-    "seed:run": "ts-node -r tsconfig-paths/register ./src/scripts/seed-users.ts",
+    "migrate:up": "npm run typeorm -- migration:run -d src/config/db.config",
+    "migrate:down": "npm run typeorm -- migration:revert -d src/config/db.config",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
+    "test:unit": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed:admin": "ts-node src/scripts/seed-admin.ts",
-    "seed:users": "ts-node src/scripts/seed-users.ts",
-    "seed:categories": "ts-node src/scripts/seed-categories.ts",
-    "seed:skills": "ts-node src/scripts/seed-skills.ts",
-    "seed:all": "npm run seed:admin && npm run seed:categories && npm run seed:users && npm run seed:skills"
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
+    "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch --runInBand",
+    "test:all": "npm run test && npm run test:e2e",
+    "test:ci": "npm run test:cov && npm run test:e2e",
+    "db:create:test": "cross-env NODE_ENV=test ts-node -r tsconfig-paths/register src/scripts/create-test-db",
+    "db:generate:test": "cross-env NODE_ENV=test npm run typeorm -- migration:generate -d src/config/db.config src/migrations/migration",
+    "db:migrate:test": "cross-env NODE_ENV=test npm run typeorm -- migration:run -d src/config/db.config",
+    "db:drop:test": "cross-env NODE_ENV=test npm run typeorm -- schema:drop -d src/config/db.config",
+    "db:seed:test": "cross-env-shell NODE_ENV=test \"npm run seed:admin && npm run seed:users && npm run seed:categories && npm run seed:skills\"",
+    "db:reset:test": "npm run db:drop:test && npm run db:migrate:test && npm run db:seed:test",
+    "pretest:e2e": "npm run db:create:test && npm run db:reset:test",
+    "start:test": "cross-env NODE_ENV=test nest start --watch",
+    "seed:admin": "ts-node -r tsconfig-paths/register src/scripts/seed-admin",
+    "seed:users": "ts-node -r tsconfig-paths/register src/scripts/seed-users",
+    "seed:categories": "ts-node -r tsconfig-paths/register src/scripts/seed-categories",
+    "seed:skills": "ts-node -r tsconfig-paths/register src/scripts/seed-skills",
+    "seed:all": "npm run seed:admin && npm run seed:users && npm run seed:categories && npm run seed:skills"
   },
   "eslintConfig": {},
   "dependencies": {
@@ -38,11 +49,16 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-socket.io": "^11.1.8",
+    "@nestjs/platform-ws": "^11.1.7",
     "@nestjs/serve-static": "^5.0.4",
+    "@nestjs/swagger": "^11.2.1",
     "@nestjs/typeorm": "^11.0.0",
+    "@nestjs/websockets": "^11.1.7",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "find-config": "^1.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "nest-winston": "^1.10.2",
@@ -52,7 +68,8 @@
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.27",
     "winston": "^3.18.3",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -64,10 +81,14 @@
     "@swc/core": "^1.10.7",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.0",
+    "@types/find-config": "^1.0.4",
     "@types/jest": "^29.5.14",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.10.7",
+    "@types/pg": "^8.15.6",
     "@types/supertest": "^6.0.2",
+    "@types/ws": "^8.18.1",
+    "cross-env": "^10.1.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -89,7 +110,7 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
@@ -97,7 +118,10 @@
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "coverageDirectory": "./coverage",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "@/(.*)": "<rootDir>/src/$1"
+    }
   }
 }
