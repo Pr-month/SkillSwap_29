@@ -1,8 +1,6 @@
 // files.interceptor.ts
 import {
   Injectable,
-  HttpException,
-  HttpStatus,
   NestInterceptor,
   CallHandler,
   ExecutionContext,
