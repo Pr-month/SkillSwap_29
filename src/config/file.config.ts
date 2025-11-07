@@ -8,4 +8,5 @@ export const fileConfig = registerAs('FILE_CONFIG', () => ({
     'image/jpg',
     'image/gif',
   ],
+  imageCDN: process.env.IMAGE_CDN || 'http://localhost:3000/public/',
 }));
