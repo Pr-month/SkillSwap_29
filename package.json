@@ -33,7 +33,7 @@
     "db:drop:test": "cross-env NODE_ENV=test npm run typeorm -- schema:drop -d src/config/db.config",
     "db:seed:test": "cross-env-shell NODE_ENV=test \"npm run seed:admin && npm run seed:users && npm run seed:categories && npm run seed:skills\"",
     "db:reset:test": "npm run db:drop:test && npm run db:migrate:test && npm run db:seed:test",
-    "pretest:e2e": "npm run db:create:test && npm run db:reset:test",
+    "setup:test:e2e": "npm run db:create:test && npm run db:reset:test",
     "start:test": "cross-env NODE_ENV=test nest start --watch",
     "seed:admin": "ts-node -r tsconfig-paths/register src/scripts/seed-admin",
     "seed:users": "ts-node -r tsconfig-paths/register src/scripts/seed-users",
