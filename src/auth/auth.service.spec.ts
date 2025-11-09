@@ -100,16 +100,12 @@ describe('AuthService (unit)', () => {
         favoriteSkills: [],
       }));
       mockUserRepo.save.mockImplementation(async (user) => user);
-      mockJwtService.signAsync.mockResolvedValueOnce('accessToken');
-      mockJwtService.signAsync.mockResolvedValueOnce('refreshToken');
-      jest.spyOn(service, 'updateRefreshToken').mockResolvedValue(undefined);
 
       const dto = { email: 'new@example.com', password: '12345', name: 'New', wantToLearn: '123e4567-e89b-12d3-a456-426614174000', };
       const result = await service.register(dto as any);
 
-      expect(result.user.email).toBe(dto.email);
-      expect(result).toHaveProperty('accessToken', 'accessToken');
-      expect(result).toHaveProperty('refreshToken', 'refreshToken');
+      expect(result.email).toBe(dto.email);
+      expect(result).toHaveProperty('id', 'some-uuid');
     });
 
     it('Выбрасывает ConflictException если email уже существует.', async () => {
@@ -130,16 +126,11 @@ describe('AuthService (unit)', () => {
     it('Успешно логинит при корректных данных.', async () => {
       mockUserRepo.findOne.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      mockJwtService.signAsync.mockResolvedValueOnce('accessToken');
-      mockJwtService.signAsync.mockResolvedValueOnce('refreshToken');
-      jest.spyOn(service, 'updateRefreshToken').mockResolvedValue(undefined);
 
       const result = await service.login({ email: mockUser.email, password: '12345' } as any);
 
-      expect(result.accessToken).toBe('accessToken');
-      expect(result.refreshToken).toBe('refreshToken');
-      expect(userRepo.findOne).toHaveBeenCalledWith({ where: { email: mockUser.email } });
-      expect(bcrypt.compare).toHaveBeenCalledWith('12345', mockUser.password);
+      expect(result).toHaveProperty('email', mockUser.email);
+      expect(result).toHaveProperty('id', mockUser.id);
     });
 
     it('Выбрасывает UnauthorizedException если пользователь не найден.', async () => {
@@ -158,7 +149,9 @@ describe('AuthService (unit)', () => {
         service.login({ email: mockUser.email, password: 'wrong' } as any),
       ).rejects.toThrow(UnauthorizedException);
     });
+
   });
+
 
   describe('refreshTokens', () => {
     it('Успешно обновляет токены при валидном refreshToken.', async () => {

@@ -84,8 +84,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    const { password: _, ...userSafe } = user;
-    return { user: userSafe, ...tokens };
+    return user;
   }
 
   async login(dto: LoginDto) {
@@ -104,8 +103,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    const { password: _, ...userSafe } = user;
-    return { user: userSafe, ...tokens };
+    return user;
   }
 
   async logout(userId: UUID) {
