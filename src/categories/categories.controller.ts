@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
-import { Category } from './entities/category.entity';
+import { Category } from '../entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UserRole } from 'src/enums/roles.enum';
