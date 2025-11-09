@@ -20,6 +20,7 @@ import { appConfig } from '@/config/app.config';
 import { UserRole } from '@/enums/roles.enum';
 import { Gender } from '@/enums/gender.enum';
 import { UUID } from 'crypto';
+import { Skill } from '@/entities/skill.entity';
 
 interface QueryFailedErrorWithCode extends QueryFailedError {
   code: string;
@@ -45,11 +46,20 @@ export class AuthService {
       this.appConfig.bcryptSalt,
     );
 
+    const skillToLearn = await this.userRepository.manager.findOne(Skill, {
+      where: { id: dto.wantToLearn },
+    });
+
+    if (!skillToLearn) {
+      throw new BadRequestException('Категория для изучения не найдена');
+    }
+
     const user = this.userRepository.create({
       ...dto,
       password: hashedPassword,
       role: dto.role || UserRole.USER,
       gender: dto.gender || Gender.UNKNOWN,
+      wantToLearn: [skillToLearn],
     });
 
     try {

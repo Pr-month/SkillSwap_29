@@ -61,10 +61,21 @@ describe('AuthService (unit)', () => {
   };
 
   beforeEach(async () => {
+    const mockSkill = { 
+      id: '123e4567-e89b-12d3-a456-426614174000', 
+      name: 'JavaScript' 
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: getRepositoryToken(User), useValue: mockUserRepo },
+        { provide: getRepositoryToken(User), useValue: {
+            ...mockUserRepo,
+            manager: {
+              findOne: jest.fn().mockResolvedValue(mockSkill),
+            },
+          } 
+        },
         { provide: JwtService, useValue: mockJwtService },
         { provide: jwtConfig.KEY, useValue: mockJwtConfig },
         { provide: appConfig.KEY, useValue: mockAppConfig },
@@ -93,7 +104,7 @@ describe('AuthService (unit)', () => {
       mockJwtService.signAsync.mockResolvedValueOnce('refreshToken');
       jest.spyOn(service, 'updateRefreshToken').mockResolvedValue(undefined);
 
-      const dto = { email: 'new@example.com', password: '12345', name: 'New' };
+      const dto = { email: 'new@example.com', password: '12345', name: 'New', wantToLearn: '123e4567-e89b-12d3-a456-426614174000', };
       const result = await service.register(dto as any);
 
       expect(result.user.email).toBe(dto.email);
