@@ -15,53 +15,48 @@ describe('JwtAuthGuard', () => {
   };
 
   beforeEach(() => {
-    jwtService = { verify: jest.fn() } as any;
+    jwtService = { verifyAsync: jest.fn() } as any;
     guard = new JwtAuthGuard(jwtService, mockJwtConfig);
+    jest.clearAllMocks();
   });
 
-  const createMockContext = (authHeader?: string) => {
-    return {
-      switchToHttp: () => ({
-        getRequest: () => ({
-          headers: { authorization: authHeader },
-        }),
+  const createMockContext = (authHeader?: string) => ({
+    switchToHttp: () => ({
+      getRequest: () => ({
+        headers: { authorization: authHeader },
       }),
-    } as any;
-  };
+    }),
+  }) as any;
 
-  it('Выбрасывает UnauthorizedException если заголовок Authorization отсутствует.', () => {
+  it('Выбрасывает UnauthorizedException если заголовок Authorization отсутствует.', async () => {
     const context = createMockContext(undefined);
-    expect(() => guard.canActivate(context)).toThrow(
-      UnauthorizedException,
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      new UnauthorizedException('Token not found'),
     );
   });
 
-  it('Выбрасывает UnauthorizedException если токен отсутствует после Bearer.', () => {
+  it('Выбрасывает UnauthorizedException если токен отсутствует после Bearer.', async () => {
     const context = createMockContext('Bearer');
-    expect(() => guard.canActivate(context)).toThrow(
-      UnauthorizedException,
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      new UnauthorizedException('Token not found'),
     );
   });
 
-  it('Выбрасывает UnauthorizedException при неверном токене.', () => {
-    (jwtService.verify as jest.Mock).mockImplementation(() => {
-      throw new Error('Invalid token');
-    });
+  it('Выбрасывает UnauthorizedException при неверном токене.', async () => {
+    (jwtService.verifyAsync as jest.Mock).mockRejectedValue(new Error('Invalid token'));
 
     const context = createMockContext('Bearer invalidToken');
-    expect(() => guard.canActivate(context)).toThrow(
-      UnauthorizedException,
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      new UnauthorizedException('Invalid or expired token'),
     );
   });
 
-  it('Успешно активирует guard при валидном токене.', () => {
+  it('Успешно активирует guard при валидном токене.', async () => {
     const payload = { sub: 'user-id', email: 'test@example.com', role: 'USER' };
-    (jwtService.verify as jest.Mock).mockReturnValue(payload);
+    (jwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
 
     const request: any = {
-      headers: {
-        authorization: 'Bearer validToken',
-      },
+      headers: { authorization: 'Bearer validToken' },
     };
 
     const context = {
@@ -70,10 +65,11 @@ describe('JwtAuthGuard', () => {
       }),
     } as any;
 
-    const result = guard.canActivate(context);
+    const result = await guard.canActivate(context);
+
     expect(result).toBe(true);
     expect(request.user).toEqual(payload);
-    expect(jwtService.verify).toHaveBeenCalledWith('validToken', {
+    expect(jwtService.verifyAsync).toHaveBeenCalledWith('validToken', {
       secret: mockJwtConfig.accessSecret,
     });
   });

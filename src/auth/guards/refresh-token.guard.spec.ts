@@ -27,67 +27,53 @@ describe('RefreshTokenGuard', () => {
     jest.clearAllMocks();
   });
 
-  const createMockContext = (authHeader?: string) => {
-    return {
-      switchToHttp: () => ({
-        getRequest: () => ({
-          headers: { authorization: authHeader },
-        }),
+  const createMockContext = (authHeader?: string) => ({
+    switchToHttp: () => ({
+      getRequest: () => ({
+        headers: { authorization: authHeader },
       }),
-    } as any;
-  };
+    }),
+  } as any);
 
   it('Выбрасывает UnauthorizedException если заголовок Authorization отсутствует.', async () => {
     const context = createMockContext(undefined);
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
   });
 
   it('Выбрасывает UnauthorizedException если токен отсутствует после Bearer.', async () => {
     const context = createMockContext('Bearer');
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
   });
 
   it('Выбрасывает UnauthorizedException при неверном JWT.', async () => {
     (jwtService.verifyAsync as jest.Mock).mockRejectedValue(new Error('Invalid'));
     const context = createMockContext('Bearer invalidToken');
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
   });
 
   it('Выбрасывает UnauthorizedException если пользователь не найден.', async () => {
-    (jwtService.verifyAsync as jest.Mock).mockResolvedValue({ sub: 'user-id' });
+    (jwtService.verifyAsync as jest.Mock).mockResolvedValue({ sub: '123e4567-e89b-12d3-a456-426614174000' });
     (userRepository.findOne as jest.Mock).mockResolvedValue(null);
 
     const context = createMockContext('Bearer validToken');
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
   });
 
   it('Выбрасывает UnauthorizedException если refreshToken пользователя отсутствует.', async () => {
-    (jwtService.verifyAsync as jest.Mock).mockResolvedValue({ sub: 'user-id' });
-    (userRepository.findOne as jest.Mock).mockResolvedValue({ id: 'user-id', refreshToken: null });
+    (jwtService.verifyAsync as jest.Mock).mockResolvedValue({ sub: '123e4567-e89b-12d3-a456-426614174000' });
+    (userRepository.findOne as jest.Mock).mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000', refreshToken: null });
 
     const context = createMockContext('Bearer validToken');
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
   });
 
   it('Выбрасывает UnauthorizedException если токен не совпадает.', async () => {
-    (jwtService.verifyAsync as jest.Mock).mockResolvedValue({ sub: 'user-id' });
-    (userRepository.findOne as jest.Mock).mockResolvedValue({ id: 'user-id', refreshToken: 'hashed' });
+    (jwtService.verifyAsync as jest.Mock).mockResolvedValue({ sub: '123e4567-e89b-12d3-a456-426614174000' });
+    (userRepository.findOne as jest.Mock).mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000', refreshToken: 'hashed-token' });
     (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
     const context = createMockContext('Bearer validToken');
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
   });
 
   it('Успешно активирует guard при валидном токене.', async () => {
