@@ -69,7 +69,6 @@ describe('Skills тесты (e2e)', () => {
   });
 
   afterAll(async () => {
-    console.log('Closing app:', app);
     await app.close();
   });
 
