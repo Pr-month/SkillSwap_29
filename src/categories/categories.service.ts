@@ -2,10 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
-import { Category } from './entities/category.entity';
+import { Category } from '@/entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
@@ -29,19 +30,39 @@ export class CategoriesService {
       relations: ['parent', 'children'],
     });
     if (!category) {
-      throw new NotFoundException(`Category with ID ${id} not found`);
+      throw new NotFoundException(`Категория с ID ${id} не найдена`);
     }
     return category;
   }
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
-    if (createCategoryDto.parentId) {
+    const { name, parentId } = createCategoryDto;
+
+    const qb = this.categoryRepository.createQueryBuilder('category');
+    qb.where('LOWER(category.name) = LOWER(:name)', { name });
+
+    if (parentId) {
+      qb.andWhere('category.parentId = :parentId', { parentId });
+    } else {
+      qb.andWhere('category.parentId IS NULL');
+    }
+
+    const existingCategory = await qb.getOne();
+
+    if (existingCategory) {
+      throw new ConflictException(
+        `Категория с названием "${name}" уже существует на этом уровне.`,
+      );
+    }
+
+    if (parentId) {
       const parentCategory = await this.categoryRepository.findOne({
-        where: { id: createCategoryDto.parentId },
+        where: { id: parentId },
       });
       if (!parentCategory) {
-        throw new BadRequestException(`
-          Parent category with ID ${createCategoryDto.parentId} not found`);
+        throw new BadRequestException(
+          `Родительская категория с ID ${parentId} не найдена`,
+        );
       }
     }
 
@@ -53,24 +74,30 @@ export class CategoriesService {
     id: string,
     updateCategoryDto: UpdateCategoryDto,
   ): Promise<Category> {
-    const category = await this.findOne(id);
+    // Загружаем категорию без связей, чтобы избежать конфликтов при обновлении
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+    });
+
+    if (!category) {
+      throw new NotFoundException(`Категория с ID ${id} не найдена`);
+    }
 
     if (updateCategoryDto.parentId) {
       const parentCategory = await this.categoryRepository.findOne({
         where: { id: updateCategoryDto.parentId },
       });
       if (!parentCategory) {
-        throw new BadRequestException(`
-          Parent category with ID ${updateCategoryDto.parentId} not found`);
+        throw new BadRequestException(
+          `Родительская категория с ID ${updateCategoryDto.parentId} не найдена`,
+        );
       }
     }
 
-    const updatedCategory = this.categoryRepository.merge(
-      category,
-      updateCategoryDto,
-    );
+    // Вместо использования merge, напрямую присваиваем свойства
+    Object.assign(category, updateCategoryDto);
 
-    return this.categoryRepository.save(updatedCategory);
+    return this.categoryRepository.save(category);
   }
 
   async remove(id: string): Promise<void> {

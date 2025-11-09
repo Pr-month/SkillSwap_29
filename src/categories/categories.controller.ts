@@ -19,13 +19,13 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
-import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { UserRole } from 'src/enums/roles.enum';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { HasRoles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from '@/enums/roles.enum';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '@/auth/guards/roles.guard';
+import { HasRoles } from '@/auth/decorators/roles.decorator';
+import { Category } from '@/entities/category.entity';
 
 @ApiTags('Категории')
 @Controller('categories')
@@ -65,7 +65,29 @@ export class CategoriesController {
   })
   @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 403, description: 'Нет прав доступа' })
-  @ApiBody({ type: CreateCategoryDto })
+  @ApiResponse({
+    status: 409,
+    description: 'Категория с таким названием уже существует на данном уровне',
+  })
+  @ApiBody({
+    type: CreateCategoryDto,
+    examples: {
+      'Создание категории': {
+        summary: 'Пример создания категории',
+        description: 'В этом примере создается категория "Программирование".',
+        value: { name: 'Программирование' },
+      },
+      'Создание подкатегории': {
+        summary: 'Пример создания подкатегории',
+        description:
+          'В этом примере создается подкатегория "Веб-разработка" внутри существующей категории.',
+        value: {
+          name: 'Веб-разработка',
+          parentId: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
+        },
+      },
+    },
+  })
   async createCategory(
     @Body() createCategoryDto: CreateCategoryDto,
   ): Promise<Category> {
@@ -92,8 +114,24 @@ export class CategoriesController {
   @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 403, description: 'Нет прав доступа' })
   @ApiResponse({ status: 404, description: 'Категория не найдена' })
-  @ApiParam({ name: 'id', description: 'ID категории' })
-  @ApiBody({ type: UpdateCategoryDto })
+  @ApiParam({
+    name: 'id',
+    description: 'ID категории для обновления',
+    example: 'cfd8ef51-a19e-40f5-9fdb-518a0696c118',
+  })
+  @ApiBody({
+    type: UpdateCategoryDto,
+    examples: {
+      'Изменение названия': {
+        summary: 'Изменить название категории',
+        value: { name: 'Новое название' },
+      },
+      'Перемещение категории': {
+        summary: 'Переместить категорию в другую родительскую',
+        value: { parentId: 'cfd8ef51-a19e-40f5-9fdb-518a0696c118' },
+      },
+    },
+  })
   async updateCategory(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -114,7 +152,11 @@ export class CategoriesController {
   @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 403, description: 'Нет прав доступа' })
   @ApiResponse({ status: 404, description: 'Категория не найдена' })
-  @ApiParam({ name: 'id', description: 'ID категории' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID категории для удаления',
+    example: 'cfd8ef51-a19e-40f5-9fdb-518a0696c118',
+  })
   async deleteCategory(@Param('id') id: string): Promise<void> {
     return this.categoriesService.remove(id);
   }
