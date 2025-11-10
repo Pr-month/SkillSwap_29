@@ -6,11 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
-<<<<<<< HEAD
-import { Category } from '../entities/category.entity';
-=======
 import { Category } from '@/entities/category.entity';
->>>>>>> 02ea7935a218a11edc673c489421c62a5d4b85a8
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
