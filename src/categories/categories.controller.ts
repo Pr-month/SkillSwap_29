@@ -19,10 +19,6 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
-<<<<<<< HEAD
-import { Category } from '../entities/category.entity';
-=======
->>>>>>> 02ea7935a218a11edc673c489421c62a5d4b85a8
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UserRole } from '@/enums/roles.enum';
