@@ -61,7 +61,7 @@ describe('AuthService (unit)', () => {
   };
 
   beforeEach(async () => {
-    const mockSkill = { 
+    const mockCategory = { 
       id: '123e4567-e89b-12d3-a456-426614174000', 
       name: 'JavaScript' 
     };
@@ -72,7 +72,7 @@ describe('AuthService (unit)', () => {
         { provide: getRepositoryToken(User), useValue: {
             ...mockUserRepo,
             manager: {
-              findOne: jest.fn().mockResolvedValue(mockSkill),
+              findOne: jest.fn().mockResolvedValue(mockCategory),
             },
           } 
         },
@@ -151,7 +151,6 @@ describe('AuthService (unit)', () => {
     });
 
   });
-
 
   describe('refreshTokens', () => {
     it('Успешно обновляет токены при валидном refreshToken.', async () => {
