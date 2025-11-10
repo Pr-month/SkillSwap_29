@@ -1,34 +1,31 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ClassSerializerInterceptor } from '@nestjs/common';
+import { HttpAdapterHost, Reflector } from '@nestjs/core';
+import { AllExceptionFilter } from '@/common/all-exception.filter';
 import { Test } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import * as request from 'supertest';
 import type { App } from 'supertest/types';
-import { SkillsService } from '@/skills/skills.service';
 import { CategoriesService } from '@/categories/categories.service';
 import { AppModule } from '@/app.module';
-import { User } from '@/entities/user.entity';
 import { Skill } from '@/entities/skill.entity';
 import { CreateSkillDto } from '@/skills/dto/create-skill.dto';
 import { FindSkillsQueryDto } from '@/skills/dto/find-skills.dto';
 import { UpdateSkillDto } from '@/skills/dto/update-skill.dto';
 import { UUID } from 'crypto';
 import { Category } from '@/categories/entities/category.entity';
-import { UsersService } from '@/users/users.service';
+import { testUsers } from '@/scripts/seed-users.data';
 
 describe('Skills тесты (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let skillsService: SkillsService;
   let createdSkill: Skill;
   let categoryService: CategoriesService;
-  let userService: UsersService;
   let userId: UUID;
   let categories: Category[];
   let category: Category;
   let server: any;
   let loginResponse: any;
   let token: any;
-  let user: User;
   let userEmail: string;
   let userPassword: string;
 
@@ -38,27 +35,18 @@ describe('Skills тесты (e2e)', () => {
     }).compile();
 
     app = module.createNestApplication();
+    const httpAdapterHost = app.get(HttpAdapterHost);
+    app.useGlobalFilters(new AllExceptionFilter(httpAdapterHost));
+    app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
     await app.init();
 
     dataSource = app.get(DataSource);
     await dataSource.runMigrations();
 
-    skillsService = app.get(SkillsService);
-    const { data } = await skillsService.findAll({ page: 1, limit: 20 });
-
-    userId = data[0].owner.id;
-    categoryService = app.get(CategoriesService);
-    categories = await categoryService.findAll();
-    category = categories[0];
-
-    userService = app.get(UsersService);
-    user = await userService.findOneById(userId);
-    userEmail = user.email;
-    userPassword = 'user123';
-  });
-
-  beforeEach(async () => {
     server = app.getHttpServer() as unknown as App;
+
+    userEmail = testUsers[0].email;
+    userPassword = testUsers[0].password;
 
     loginResponse = await request(server)
       .post('/auth/login')
@@ -66,6 +54,12 @@ describe('Skills тесты (e2e)', () => {
       .expect(200);
 
     token = loginResponse.body.accessToken;
+    userId = loginResponse.body.id;
+
+    categoryService = app.get(CategoriesService);
+    categories = await categoryService.findAll();
+    category = categories[0];
+
   });
 
   afterAll(async () => {
@@ -103,7 +97,12 @@ describe('Skills тесты (e2e)', () => {
       page: 1,
       limit: 20,
     };
-    const res = await request(server).get('/skills').send(query).expect(200);
+
+    console.log(query)
+    const res = await request(server)
+      .get('/skills')
+      .query(query)
+      .expect(200);
 
     expect(res.body.data).toBeDefined();
     expect(res.body.count).toBeDefined();
