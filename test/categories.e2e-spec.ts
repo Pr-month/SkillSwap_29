@@ -1,7 +1,15 @@
 import { AppModule } from '@/app.module';
-import { INestApplication } from '@nestjs/common';
+import { ClassSerializerInterceptor, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
+import * as dotenv from 'dotenv';
+import { WsAdapter } from '@nestjs/platform-ws';
+import { HttpAdapterHost, Reflector } from '@nestjs/core';
+import { AllExceptionFilter } from '@/common/all-exception.filter';
+
+dotenv.config();
+const adminEmail = process.env.ADMIN_EMAIL;
+const adminPassword = process.env.ADMIN_PASSWROD;
 
 describe('Categories (e2e)', () => {
   let app: INestApplication;
@@ -13,18 +21,20 @@ describe('Categories (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    await app.init();
 
-    await request(app.getHttpServer()).post('/auth/register').send({
-      email: 'admin@skillswap.com',
-      password: 'admin123',
-      name: 'Admin',
-      role: 'ADMIN',
-    });
+    app.useWebSocketAdapter(new WsAdapter(app));
+
+    const httpAdatperHost = app.get(HttpAdapterHost);
+    app.useGlobalFilters(new AllExceptionFilter(httpAdatperHost));
+    app.useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+    );
+
+    await app.init();
 
     const res = await request(app.getHttpServer())
       .post('/auth/login')
-      .send({ email: 'admin@skillswap.com', password: 'admin123' });
+      .send({ email: adminEmail, password: adminPassword });
 
     token = res.body.accessToken;
   });
