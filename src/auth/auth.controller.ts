@@ -12,11 +12,14 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiBody,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
+import { RefreshResponseDto } from './dto/refresh-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { AuthRequest, RefreshRequest } from './types';
@@ -47,9 +50,32 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  @ApiOperation({ summary: 'Логин пользователя' })
-  @ApiResponse({ status: 200, description: 'Успешная аутентификация' })
-  @ApiResponse({ status: 401, description: 'Неверные учётные данные' })
+  @ApiOperation({
+    summary: 'Логин пользователя',
+    description:
+      'Аутентификация пользователя по email и паролю. Возвращает данные пользователя и токены доступа.',
+  })
+  @ApiBody({
+    description: 'Учетные данные пользователя',
+    type: LoginDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Успешная аутентификация',
+    type: LoginResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Ошибка валидации входных данных',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Неверные учётные данные',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Внутренняя ошибка сервера',
+  })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -70,11 +96,24 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @ApiBearerAuth()
   @Post('refresh')
-  @ApiOperation({ summary: 'Обновление пары токенов по refresh токену' })
-  @ApiResponse({ status: 200, description: 'Токены обновлены' })
+  @ApiOperation({
+    summary: 'Обновление пары токенов',
+    description:
+      'Обновление access и refresh токенов по валидному refresh токену',
+  })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Токены успешно обновлены',
+    type: RefreshResponseDto,
+  })
   @ApiResponse({
     status: 401,
     description: 'Неавторизован или просрочен refresh токен',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Внутренняя ошибка сервера',
   })
   async refresh(@Req() req: RefreshRequest) {
     return this.authService.refreshTokens(req.user.id, req.token);
