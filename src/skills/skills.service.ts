@@ -13,15 +13,15 @@ import {
   FindOptionsWhere,
   Equal,
 } from 'typeorm';
-import { Skill } from './entities/skill.entity';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
+import { UUID } from 'crypto';
+import { User } from '@/entities/user.entity';
+import { Skill } from '@/entities/skill.entity';
+import { Category } from '@/entities/category.entity';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { FindSkillsQueryDto } from './dto/find-skills.dto';
-import { Category } from '../entities/category.entity';
-import { UUID } from 'crypto';
-import { User } from '../entities/user.entity';
 
 @Injectable()
 export class SkillsService {
@@ -58,14 +58,14 @@ export class SkillsService {
       take: limit,
       skip: offset,
       order: { createdAt: 'DESC' },
-      relations: ['owner'],
+      relations: ['owner', 'category'],
     };
 
     try {
       const [data, count] = await this.skillsRepository.findAndCount(options);
       return { data, count };
     } catch (error) {
-      console.error('Ошибка при выполнении запроса:', error);
+      this.logger.error(`Ошибка при поиске навыков: ${error}`);
       throw error;
     }
   }
@@ -130,9 +130,13 @@ export class SkillsService {
 
     // Удаление соответствующих изображений
     await Promise.all(
-      skill.images.map((image) => {
+      skill.images.map(async (image) => {
         const imagePath = join(process.cwd(), 'uploads', image);
-        return unlink(imagePath).catch(() => null); // Игнорируем ошибки при удалении
+        try {
+          return await unlink(imagePath);
+        } catch {
+          return null;
+        } // Игнорируем ошибки при удалении
       }),
     );
 

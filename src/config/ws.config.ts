@@ -2,7 +2,11 @@ import { registerAs } from '@nestjs/config';
 
 export const wsConfig = registerAs('WS_CONFIG', () => ({
   notifications: {
-    port: Number(process.env.NOTIFICATIONS_WS_PORT) || 3001,
+    host: String(process.env.NOTIFICATIONS_WS_HOST) || 'localhost',
+    port:
+      process.env.NODE_ENV === 'test'
+        ? 0
+        : Number(process.env.NOTIFICATIONS_WS_PORT) || 3001,
     path: '/',
     cors: {
       origin:

@@ -52,7 +52,7 @@ export class UsersService {
   async getAllUsers(
     query: UsersQueryDto,
   ): Promise<{ data: User[]; count: number }> {
-    const { page, limit } = query;
+    const { page = 1, limit = 10 } = query;
     const offset = (page - 1) * limit;
 
     const options: FindManyOptions<User> = {
