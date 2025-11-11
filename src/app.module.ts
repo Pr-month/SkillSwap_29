@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
@@ -18,8 +18,8 @@ import { appConfig } from '@/config/app.config';
 import { jwtConfig } from '@/config/jwt.config';
 import { dbConfig } from '@/config/db.config';
 import { fileConfig } from '@/config/file.config';
-import { wsConfig } from './config/ws.config';
-
+import { wsConfig } from '@/config/ws.config';
+import { LoggingMiddleware } from '@/logger';
 
 @Module({
   imports: [
@@ -56,4 +56,8 @@ import { wsConfig } from './config/ws.config';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggingMiddleware).forRoutes('*');
+  }
+}

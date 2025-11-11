@@ -1,27 +1,27 @@
-// files.interceptor.ts
 import {
   Injectable,
-  HttpException,
-  HttpStatus,
   NestInterceptor,
   CallHandler,
   ExecutionContext,
+  Inject,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ConfigService } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
-import { IFileConfig } from '../config/types';
+import { fileConfig } from '@/config/file.config';
 
 @Injectable()
 export class FilesInterceptor implements NestInterceptor {
   private multerInterceptor: NestInterceptor;
 
-  constructor(private readonly configService: ConfigService) {
-    const fileConfig = this.configService.get('FILE_CONFIG') as IFileConfig;
-    const maxSize = fileConfig.fileSize;
-    const allowedTypes = fileConfig.allowedMimeTypes;
+  constructor(
+    @Inject(fileConfig.KEY)
+    private readonly config: ConfigType<typeof fileConfig>,
+  ) {
+    const maxSize = config.fileSize;
+    const allowedTypes = config.allowedMimeTypes;
 
     // FileInterceptor возвращает класс (Type<NestInterceptor>)
     const MixinInterceptorClass = FileInterceptor('file', {
