@@ -20,7 +20,6 @@ import { dbConfig } from '@/config/db.config';
 import { fileConfig } from '@/config/file.config';
 import { wsConfig } from './config/ws.config';
 
-
 @Module({
   imports: [
     ServeStaticModule.forRoot({
