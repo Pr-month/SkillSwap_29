@@ -35,11 +35,19 @@ async function bootstrap() {
     }),
   );
 
+  const config = appConfig();
+
+  // CORS
+  app.enableCors({
+    origin: config.corsOrigin,
+    credentials: true,
+  });
+
   // Swagger
   configureSwagger(app);
 
   // Запуск сервера
-  const { port, host } = appConfig();
+  const { port, host } = config;
   await app.listen(port, host);
   logger.log(`Сервер запущен: http://${host}:${port}`);
 }
