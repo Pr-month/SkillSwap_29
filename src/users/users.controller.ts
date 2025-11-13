@@ -9,12 +9,7 @@ import {
   Body,
   Query,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { User } from '@/entities/user.entity';
 import { AuthRequest } from '@/auth/types';
@@ -23,67 +18,42 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PasswordDto } from '@/auth/dto/password.dto';
 import { UUID } from 'crypto';
 import { UsersQueryDto } from './dto/users-query.dto';
+import {
+  ApiGetAllUsers,
+  ApiGetMe,
+  ApiGetUser,
+  ApiGetUsersBySkill,
+  ApiUpdateMe,
+  ApiUpdatePassword,
+} from './users.swagger';
 
-@ApiTags('users')
+@ApiTags('Пользователи')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Получить список пользователей с пагинацией' })
-  @ApiResponse({
-    status: 200,
-    description: 'Список пользователей с пагинацией',
-    schema: {
-      type: 'object',
-      properties: {
-        data: { type: 'array', items: { $ref: '#/components/schemas/User' } },
-        meta: {
-          type: 'object',
-          properties: {
-            page: { type: 'number', example: 1 },
-            limit: { type: 'number', example: 20 },
-            total: { type: 'number', example: 100 },
-            totalPages: { type: 'number', example: 5 },
-          },
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 400, description: 'Некорректные параметры запроса' })
+  @ApiGetAllUsers()
   async allUsers(@Query() query: UsersQueryDto) {
     return this.usersService.getAllUsers(query);
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Get('me')
-  @ApiOperation({ summary: 'Получить профиль текущего пользователя' })
-  @ApiResponse({ status: 200, description: 'Профиль пользователя', type: User })
-  @ApiResponse({ status: 401, description: 'Неавторизован' })
+  @ApiGetMe()
   async getMe(@Req() req: AuthRequest): Promise<User> {
     return this.usersService.findOneById(req.user.sub);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Получить пользователя по ID' })
-  @ApiResponse({ status: 200, description: 'Пользователь', type: User })
-  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
+  @ApiGetUser()
   async findOne(@Param('id', ParseUUIDPipe) id: UUID): Promise<User> {
     return this.usersService.findOneById(id);
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Patch('me')
-  @ApiOperation({ summary: 'Обновить профиль текущего пользователя' })
-  @ApiResponse({
-    status: 200,
-    description: 'Обновлённый пользователь',
-    type: User,
-  })
-  @ApiResponse({ status: 400, description: 'Валидационная ошибка' })
-  @ApiResponse({ status: 401, description: 'Неавторизован' })
+  @ApiUpdateMe()
   async updateMe(
     @Req() req: AuthRequest,
     @Body() updateUserDto: UpdateUserDto,
@@ -92,12 +62,8 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Patch('me/password')
-  @ApiOperation({ summary: 'Обновить пароль текущего пользователя' })
-  @ApiResponse({ status: 200, description: 'Пароль обновлён' })
-  @ApiResponse({ status: 400, description: 'Валидационная ошибка' })
-  @ApiResponse({ status: 401, description: 'Неавторизован' })
+  @ApiUpdatePassword()
   async updatePassword(
     @Req() req: AuthRequest,
     @Body() updatePasswordDto: PasswordDto,
@@ -110,21 +76,7 @@ export class UsersController {
   }
 
   @Get('by-skill/:id')
-  @ApiOperation({ summary: 'Получить пользователей по категории навыка' })
-  @ApiResponse({
-    status: 200,
-    description:
-      'Список пользователей, владеющих навыком из указанной категории',
-    type: [User],
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Некорректный ID категории',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Категория не найдена',
-  })
+  @ApiGetUsersBySkill()
   async getUsersBySkillCategory(@Param('id') skillId: string): Promise<User[]> {
     return this.usersService.getUsersBySkillCategory(skillId);
   }
