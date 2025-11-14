@@ -247,12 +247,10 @@ describe('RequestsService', () => {
     });
 
     it('should throw ForbiddenException if user is not receiver', async () => {
-      jest
-        .spyOn(service, 'findOne')
-        .mockResolvedValue({
-          ...mockRequest,
-          receiver: { id: 'other-id' },
-        } as any);
+      jest.spyOn(service, 'findOne').mockResolvedValue({
+        ...mockRequest,
+        receiver: { id: 'other-id' },
+      } as any);
       await expect(service.markAsRead(requestId, userId)).rejects.toThrow(
         ForbiddenException,
       );
