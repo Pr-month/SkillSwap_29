@@ -11,21 +11,21 @@ import { UUID } from 'crypto';
 import { Skill } from '@/entities/skill.entity';
 import { User } from '@/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { IAppConfig } from '@/config/types';
 import { appConfig } from '@/config/app.config';
 import { SkillsService } from '@/skills/skills.service';
 import { UsersQueryDto } from './dto/users-query.dto';
+import { ConfigType } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @Inject(appConfig.KEY)
-    private readonly appConfig: IAppConfig,
     @InjectRepository(Skill)
-    private readonly skillsService: SkillsService,
-  ) {}
+    private skillRepository: Repository<Skill>,
+    @Inject(appConfig.KEY)
+    private readonly config: ConfigType<typeof appConfig>,
+  ) { }
 
   async findOneById(id: UUID): Promise<User> {
     // Загружаем пользователя с избранными навыками (ManyToMany)
@@ -58,6 +58,7 @@ export class UsersService {
     const options: FindManyOptions<User> = {
       take: limit,
       skip: offset,
+      relations: ['skills', 'wantToLearn'],
     };
 
     const [data, count] = await this.userRepository.findAndCount(options);
@@ -91,7 +92,7 @@ export class UsersService {
     if (isMatch) {
       const hashedNewPassword = await bcrypt.hash(
         newPassword,
-        this.appConfig.bcryptSalt,
+        this.config.bcryptSalt,
       );
       await this.userRepository.update(id, { password: hashedNewPassword });
       return { message: 'Пароль успешно обновлен' };
@@ -102,7 +103,7 @@ export class UsersService {
 
   async getUsersBySkillCategory(skillId: string): Promise<User[]> {
     // Получаем навык по ID
-    const skill = await this.skillsService.findById(skillId);
+    const skill = await this.skillRepository.findOne({ where: { id: skillId } });
 
     if (!skill) {
       throw new Error('Навык не найден');
