@@ -23,7 +23,6 @@ export class UsersService {
     private userRepository: Repository<User>,
     @Inject(appConfig.KEY)
     private readonly appConfig: IAppConfig,
-    @InjectRepository(Skill)
     private readonly skillsService: SkillsService,
   ) {}
 
@@ -118,9 +117,10 @@ export class UsersService {
     // Ищем пользователей, у которых эта категория в wantToLearn
     return await this.userRepository
       .createQueryBuilder('user')
-      .leftJoin('user.wantToLearn', 'wantToLearnSkill')
-      .leftJoin('wantToLearnSkill.category', 'category')
-      .where('category.id = :categoryId', { categoryId: category.id })
+      .leftJoin('user.wantToLearn', 'wantToLearnCategory')
+      .where('wantToLearnCategory.id = :categoryId', {
+        categoryId: category.id,
+      })
       .take(10)
       .getMany();
   }
