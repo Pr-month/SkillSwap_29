@@ -19,7 +19,7 @@ describe('Skills тесты (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let createdSkill: Skill;
-  let categoryService: CategoriesService;
+  let categoriesService: CategoriesService;
   let userId: UUID;
   let categories: Category[];
   let category: Category;
@@ -37,7 +37,9 @@ describe('Skills тесты (e2e)', () => {
     app = module.createNestApplication();
     const httpAdapterHost = app.get(HttpAdapterHost);
     app.useGlobalFilters(new AllExceptionFilter(httpAdapterHost));
-    app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+    app.useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+    );
     await app.init();
 
     dataSource = app.get(DataSource);
@@ -54,12 +56,11 @@ describe('Skills тесты (e2e)', () => {
       .expect(200);
 
     token = loginResponse.body.accessToken;
-    userId = loginResponse.body.id;
+    userId = loginResponse.body.user.id;
 
-    categoryService = app.get(CategoriesService);
-    categories = await categoryService.findAll();
+    categoriesService = app.get(CategoriesService);
+    categories = await categoriesService.findAll();
     category = categories[0];
-
   });
 
   afterAll(async () => {
@@ -98,11 +99,7 @@ describe('Skills тесты (e2e)', () => {
       limit: 20,
     };
 
-    console.log(query)
-    const res = await request(server)
-      .get('/skills')
-      .query(query)
-      .expect(200);
+    const res = await request(server).get('/skills').query(query).expect(200);
 
     expect(res.body.data).toBeDefined();
     expect(res.body.count).toBeDefined();
@@ -138,16 +135,14 @@ describe('Skills тесты (e2e)', () => {
       .delete(`/skills/${createdSkill.id}/favorite`)
       .set('Authorization', `Bearer ${token}`)
       .send(createdSkill.id)
-      .expect(200);
-
-    expect(res.body.message).toEqual('Навык удален из избранного');
+      .expect(204);
   });
 
   it('тестируем удаление навыка', async () => {
     const res = await request(server)
       .delete(`/skills/${createdSkill.id}`)
       .set('Authorization', `Bearer ${token}`)
-      .expect(200);
+      .expect(204);
 
     const resCheck = await request(server)
       .get(`/skills/${createdSkill.id}`)
