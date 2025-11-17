@@ -24,6 +24,8 @@ export class UsersService {
     @Inject(appConfig.KEY)
     private readonly appConfig: IAppConfig,
     private readonly skillsService: SkillsService,
+    @InjectRepository(Skill)
+    private skillRepository: Repository<Skill>,
   ) {}
 
   async findOneById(id: UUID): Promise<User> {
