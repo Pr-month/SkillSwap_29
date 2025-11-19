@@ -32,14 +32,17 @@ export class SkillsService {
     private skillsRepository: Repository<Skill>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
   ) {}
 
   async findAll(
     query: FindSkillsQueryDto,
   ): Promise<{ data: Skill[]; count: number }> {
-    const { page = 1, limit = 10, category, search } = query;
+    const { category, search } = query;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 20;
     const offset = (page - 1) * limit;
-
     const where: FindOptionsWhere<Skill> = {};
 
     if (category) {
@@ -70,7 +73,7 @@ export class SkillsService {
   async findOne(id: string): Promise<Skill> {
     const skill = await this.skillsRepository.findOne({
       where: { id },
-      relations: ['owner'],
+      relations: ['owner', 'category'],
     });
     if (!skill) {
       throw new NotFoundException(`Навык с ID ${id} не найден`);
@@ -108,10 +111,14 @@ export class SkillsService {
     });
 
     if (updateSkillDto.category !== undefined) {
-      updatedSkill.category = { id: updateSkillDto.category } as Category;
+      const category = await this.categoryRepository.findOne({
+        where: { id: updateSkillDto.category },
+      });
+
+      updatedSkill.category = category as Category;
     }
 
-    return this.skillsRepository.save(updatedSkill);
+    return await this.skillsRepository.save(updatedSkill);
   }
 
   async remove(id: string, userId: UUID): Promise<void> {

@@ -20,6 +20,7 @@ import { appConfig } from '@/config/app.config';
 import { UserRole } from '@/enums/roles.enum';
 import { Gender } from '@/enums/gender.enum';
 import { UUID } from 'crypto';
+import { Category } from '@/entities/category.entity';
 
 interface QueryFailedErrorWithCode extends QueryFailedError {
   code: string;
@@ -45,11 +46,20 @@ export class AuthService {
       this.appConfig.bcryptSalt,
     );
 
+    const categoryToLearn = await this.userRepository.manager.findOne(Category, {
+      where: { id: dto.wantToLearn },
+    });
+
+    if (!categoryToLearn) {
+      throw new BadRequestException('Категория для изучения не найдена');
+    }
+
     const user = this.userRepository.create({
       ...dto,
       password: hashedPassword,
       role: dto.role || UserRole.USER,
       gender: dto.gender || Gender.UNKNOWN,
+      wantToLearn: [categoryToLearn],
     });
 
     try {
@@ -74,8 +84,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    const { password: _, ...userSafe } = user;
-    return { user: userSafe, ...tokens };
+    return {user:user,...tokens};
   }
 
   async login(dto: LoginDto) {
@@ -94,8 +103,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    const { password: _, ...userSafe } = user;
-    return { user: userSafe, ...tokens };
+    return {user:user,...tokens};
   }
 
   async logout(userId: UUID) {
