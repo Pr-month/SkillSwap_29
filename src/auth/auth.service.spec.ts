@@ -6,7 +6,7 @@ import { User } from '@/entities/user.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { jwtConfig } from '@/config/jwt.config';
 import { AppConfig, appConfig } from '@/config/app.config';
-import { IAppConfig, IJwtConfig } from '@/config/types';
+import { IJwtConfig } from '@/config/types';
 import { Gender } from '@/enums/gender.enum';
 import { UserRole } from '@/enums/roles.enum';
 import * as bcrypt from 'bcrypt';
