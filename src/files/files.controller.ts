@@ -20,7 +20,9 @@ export class FilesController {
   @ApiUploadFile()
   uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('Файл не загружен');
+      throw new BadRequestException(
+        'Файл не указан или недопустимый тип файла',
+      );
     }
 
     this.filesService.validateFile(file);
