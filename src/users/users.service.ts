@@ -21,10 +21,11 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Skill)
+    private skillRepository: Repository<Skill>,
     @Inject(appConfig.KEY)
     private readonly config: ConfigType<typeof appConfig>,
-    private readonly skillsService: SkillsService,
-  ) {}
+  ) { }
 
   async findOneById(id: UUID): Promise<User> {
     // Загружаем пользователя с избранными навыками (ManyToMany)
@@ -102,7 +103,7 @@ export class UsersService {
 
   async getUsersBySkillCategory(skillId: string): Promise<User[]> {
     // Получаем навык по ID
-    const skill = await this.skillsService.findById(skillId);
+    const skill = await this.skillRepository.findOne({ where: { id: skillId } });
 
     if (!skill) {
       throw new Error('Навык не найден');
