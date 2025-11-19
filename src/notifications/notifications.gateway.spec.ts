@@ -18,6 +18,7 @@ describe('NotificationsGateway', () => {
     // Создаем mock конфигурации
     mockWsConfig = {
       notifications: {
+        host: 'localhost',
         port: 3001,
         path: '/',
         cors: {
