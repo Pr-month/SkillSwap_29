@@ -24,11 +24,14 @@ interface ErrorResponse {
   timestamp?: string;
 }
 
-// Типизированный Request от Nest/Express с возможным пользователем
+// Типизированный Request от Nest/Express с пользователем
+interface User {
+  id: string | number;
+  [key: string]: any; // Дополнительные свойства пользователя, если они есть
+}
+
 interface AuthenticatedRequest extends Request {
-  user?: {
-    id?: string | number;
-  } | null;
+  user?: User;
 }
 
 @Catch()
@@ -71,22 +74,25 @@ export class AllExceptionFilter implements ExceptionFilter {
 
       const logMessage = `${request.method} ${safePath} → ${status} ${error}`;
 
-      if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
-        this.logger.error(
-          logMessage,
-          !isProd && caught instanceof Error ? caught.stack : undefined,
-          'AllExceptionFilter',
-        );
-      } else {
-        this.logger.warn(logMessage, undefined, 'AllExceptionFilter');
-      }
+      const isTest = process.env.NODE_ENV === 'test';
+      if (!isTest) {
+        if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+          this.logger.error(
+            logMessage,
+            !isProd && caught instanceof Error ? caught.stack : undefined,
+            'AllExceptionFilter',
+          );
+        } else {
+          this.logger.warn(logMessage, undefined, 'AllExceptionFilter');
+        }
 
-      if (!isProd) {
-        this.logger.debug(
-          JSON.stringify(meta),
-          undefined,
-          'AllExceptionFilter',
-        );
+        if (!isProd) {
+          this.logger.debug(
+            JSON.stringify(meta),
+            undefined,
+            'AllExceptionFilter',
+          );
+        }
       }
 
       httpAdapter.reply(ctx.getResponse(), responseBody, status);
