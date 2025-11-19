@@ -12,7 +12,6 @@ import { Skill } from '@/entities/skill.entity';
 import { User } from '@/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { appConfig } from '@/config/app.config';
-import { SkillsService } from '@/skills/skills.service';
 import { UsersQueryDto } from './dto/users-query.dto';
 import { ConfigType } from '@nestjs/config';
 
@@ -25,7 +24,7 @@ export class UsersService {
     private skillRepository: Repository<Skill>,
     @Inject(appConfig.KEY)
     private readonly config: ConfigType<typeof appConfig>,
-  ) { }
+  ) {}
 
   async findOneById(id: UUID): Promise<User> {
     // Загружаем пользователя с избранными навыками (ManyToMany)
@@ -103,7 +102,9 @@ export class UsersService {
 
   async getUsersBySkillCategory(skillId: string): Promise<User[]> {
     // Получаем навык по ID
-    const skill = await this.skillRepository.findOne({ where: { id: skillId } });
+    const skill = await this.skillRepository.findOne({
+      where: { id: skillId },
+    });
 
     if (!skill) {
       throw new Error('Навык не найден');

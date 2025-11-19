@@ -10,6 +10,7 @@ export default tseslint.config(
       '**/migrations/*',
       '**/*.spec.ts',
       '**/*.e2e-spec.ts',
+      'test/setup-e2e.ts',
     ],
   },
   eslint.configs.recommended,

@@ -1,4 +1,5 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { WsAdapter } from '@nestjs/platform-ws';
 import { Test } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import * as request from 'supertest';
@@ -19,6 +20,14 @@ describe('Users (e2e)', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
+    app.useWebSocketAdapter(new WsAdapter(app));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: false,
+        transform: true,
+      }),
+    );
     await app.init();
 
     dataSource = app.get(DataSource);
@@ -48,11 +57,17 @@ describe('Users (e2e)', () => {
     await repo.save(user);
 
     const server = app.getHttpServer() as unknown as App;
-    const res = await request(server).get('/users').expect(200);
-    const body = res.body as Array<{ id: string; email: string }>;
-    expect(Array.isArray(body)).toBe(true);
-    expect(body).toHaveLength(1);
-    expect(body[0]?.email).toBe('test@example.com');
+    const res = await request(server).get('/users');
+    if (res.status !== 200) {
+      throw new Error(`GET /users failed: ${JSON.stringify(res.body)}`);
+    }
+    const body = res.body as {
+      data: Array<{ id: string; email: string }>;
+      count: number;
+    };
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.email).toBe('test@example.com');
   });
 
   it('GET /users/:id -> user', async () => {
@@ -68,7 +83,10 @@ describe('Users (e2e)', () => {
     );
 
     const server = app.getHttpServer() as unknown as App;
-    const res = await request(server).get(`/users/${created.id}`).expect(200);
+    const res = await request(server).get(`/users/${String(created.id)}`);
+    if (res.status !== 200) {
+      throw new Error(`GET /users/:id failed: ${JSON.stringify(res.body)}`);
+    }
     const body = res.body as { id: string; email: string };
     expect(body.id).toBe(created.id as unknown as string);
     expect(body.email).toBe('user2@example.com');
