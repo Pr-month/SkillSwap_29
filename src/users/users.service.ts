@@ -21,10 +21,9 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Skill)
-    private skillRepository: Repository<Skill>,
     @Inject(appConfig.KEY)
     private readonly config: ConfigType<typeof appConfig>,
+    private readonly skillService: SkillsService,
   ) { }
 
   async findOneById(id: UUID): Promise<User> {
@@ -103,7 +102,7 @@ export class UsersService {
 
   async getUsersBySkillCategory(skillId: string): Promise<User[]> {
     // Получаем навык по ID
-    const skill = await this.skillRepository.findOne({ where: { id: skillId } });
+    const skill = await this.skillService.findOne(skillId);
 
     if (!skill) {
       throw new Error('Навык не найден');
@@ -117,12 +116,11 @@ export class UsersService {
     }
 
     // Ищем пользователей, у которых эта категория в wantToLearn
-    return await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoin('user.wantToLearn', 'wantToLearnSkill')
-      .leftJoin('wantToLearnSkill.category', 'category')
-      .where('category.id = :categoryId', { categoryId: category.id })
-      .take(10)
-      .getMany();
+   return await this.userRepository
+    .createQueryBuilder('user')
+    .leftJoin('user.wantToLearn', 'wantToLearnCategory')
+    .where('wantToLearnCategory.id = :categoryId', { categoryId: category.id })
+    .take(10)
+    .getMany();
   }
 }
