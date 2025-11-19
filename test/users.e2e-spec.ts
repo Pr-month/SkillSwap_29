@@ -1,6 +1,5 @@
-import { INestApplication, ClassSerializerInterceptor } from '@nestjs/common';
-import { HttpAdapterHost, Reflector } from '@nestjs/core';
-import { AllExceptionFilter } from '@/common/all-exception.filter';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { WsAdapter } from '@nestjs/platform-ws';
 import { Test } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import * as request from 'supertest';
@@ -30,10 +29,13 @@ describe('Users (e2e)', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
-    const httpAdapterHost = app.get(HttpAdapterHost);
-    app.useGlobalFilters(new AllExceptionFilter(httpAdapterHost));
-    app.useGlobalInterceptors(
-      new ClassSerializerInterceptor(app.get(Reflector)),
+    app.useWebSocketAdapter(new WsAdapter(app));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: false,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -59,23 +61,47 @@ describe('Users (e2e)', () => {
   });
 
   it('GET /users -> [] | [user]', async () => {
-    const query: UsersQueryDto = {
-      page: 1,
-      limit: 20,
+    const repo = dataSource.getRepository(User);
+    const user = repo.create({
+      name: 'Test User',
+      email: 'test@example.com',
+      password: 'hashed',
+      gender: Gender.UNKNOWN,
+      role: UserRole.USER,
+    });
+    await repo.save(user);
+
+    const server = app.getHttpServer() as unknown as App;
+    const res = await request(server).get('/users');
+    if (res.status !== 200) {
+      throw new Error(`GET /users failed: ${JSON.stringify(res.body)}`);
+    }
+    const body = res.body as {
+      data: Array<{ id: string; email: string }>;
+      count: number;
     };
-
-    const res = await request(server).get('/users').query(query).expect(200);
-    const bodyData = res.body.data as Array<{ id: string; email: string }>;
-    const bodyCount = res.body.count;
-
-    expect(Array.isArray(bodyData)).toBe(true);
-    expect(bodyData.length).toEqual(testUsers.length + 1); // testUsers + admin
-    expect(bodyData).toBeDefined();
-    expect(bodyCount).toBeDefined();
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.email).toBe('test@example.com');
   });
 
   it('GET /users/:id -> user', async () => {
-    const res = await request(server).get(`/users/${userId}`).expect(200);
+    const repo = dataSource.getRepository(User);
+    const created = await repo.save(
+      repo.create({
+        name: 'User 2',
+        email: 'user2@example.com',
+        password: 'hashed',
+        gender: Gender.UNKNOWN,
+        role: UserRole.USER,
+      }),
+    );
+
+    const server = app.getHttpServer() as unknown as App;
+    const res = await request(server).get(`/users/${String(created.id)}`);
+    if (res.status !== 200) {
+      throw new Error(`GET /users/:id failed: ${JSON.stringify(res.body)}`);
+    }
     const body = res.body as { id: string; email: string };
     expect(body.id).toBe(userId as unknown as string);
     expect(body.email).toBe(userEmail);

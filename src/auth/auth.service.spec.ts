@@ -7,10 +7,11 @@ import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { User } from '@/entities/user.entity';
 import { jwtConfig } from '@/config/jwt.config';
-import { appConfig } from '@/config/app.config';
-import { IJwtConfig, IAppConfig } from '@/config/types';
-import { UserRole, Gender } from '@/enums';
-import { QueryFailedError } from 'typeorm';
+import { AppConfig, appConfig } from '@/config/app.config';
+import { IJwtConfig } from '@/config/types';
+import { Gender } from '@/enums/gender.enum';
+import { UserRole } from '@/enums/roles.enum';
+import * as bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
 
@@ -42,22 +43,12 @@ describe('AuthService (unit)', () => {
     refreshExpiresIn: '7d',
   };
 
-  const mockAppConfig: IAppConfig = {
-    env: 'test',
-    host: 'localhost',
+  const mockAppConfig: AppConfig = {
     port: 3000,
     bcryptSalt: 10,
-  };
-
-  const mockJwtService = {
-    signAsync: jest.fn(),
-  };
-
-  const mockUserRepo = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-    update: jest.fn(),
+    env: 'test',
+    host: 'localhost',
+    corsOrigin: 'http://localhost:3080',
   };
 
   beforeEach(async () => {

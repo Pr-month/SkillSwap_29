@@ -53,6 +53,8 @@ describe('FilesController', () => {
     // Передаем null, так как именно это вернет @UploadedFile() при отсутствии файла
     expect(() =>
       controller.uploadFile(null as unknown as Express.Multer.File),
-    ).toThrow(new BadRequestException('Файл не загружен'));
+    ).toThrow(
+      new BadRequestException('Файл не указан или недопустимый тип файла'),
+    );
   });
 });

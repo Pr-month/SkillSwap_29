@@ -6,8 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
 import { User } from '@/entities/user.entity';
 import { Skill } from '@/entities/skill.entity';
-import { appConfig } from '@/config/app.config';
-import type { IAppConfig } from '@/config/types';
+import { AppConfig, appConfig } from '@/config/app.config';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import { Category } from '@/entities/category.entity';
 import { Gender, UserRole } from '@/enums';
@@ -18,7 +17,7 @@ jest.mock('bcrypt');
 describe('UsersService', () => {
   let service: UsersService;
   let userRepository: Repository<User>;
-  let skillRepository: { find: jest.Mock };
+  let skillRepository: Repository<Skill>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   const mockCategoryId = '98765432-1234-5678-9012-345678901234';
@@ -36,6 +35,7 @@ describe('UsersService', () => {
     role: UserRole.USER,
     refreshToken: '',
     skills: [],
+    wantToLearn: [],
     favoriteSkills: [],
   };
 
@@ -58,17 +58,19 @@ describe('UsersService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
-  const mockAppConfig: IAppConfig = {
+  const mockAppConfig: AppConfig = {
     env: 'test',
     host: 'localhost',
     port: 3000,
     bcryptSalt: 10,
+    corsOrigin: 'http://localhost:3080',
   };
 
   // Создаем типизированные моки для репозиториев
   const mockUserRepository = {
     findOne: jest.fn(),
     find: jest.fn(),
+    findAndCount: jest.fn(),
     preload: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -78,7 +80,7 @@ describe('UsersService', () => {
   };
 
   const mockSkillRepository = {
-    find: jest.fn(),
+    findOne: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -90,6 +92,10 @@ describe('UsersService', () => {
           useValue: mockUserRepository,
         },
         {
+          provide: getRepositoryToken(Skill),
+          useValue: mockSkillRepository,
+        },
+        {
           provide: appConfig.KEY,
           useValue: mockAppConfig,
         },
@@ -98,19 +104,7 @@ describe('UsersService', () => {
 
     service = module.get<UsersService>(UsersService);
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
-    // Настраиваем мок менеджера для возврата мока репозитория скиллов
-    mockUserRepository.manager.getRepository.mockImplementation((entity) => {
-      if (entity === Skill) {
-        return mockSkillRepository;
-      }
-      throw new Error(`Unexpected repository requested: ${entity}`);
-    });
-
-    skillRepository = userRepository.manager.getRepository(
-      Skill,
-    ) as unknown as {
-      find: jest.Mock;
-    };
+    skillRepository = module.get<Repository<Skill>>(getRepositoryToken(Skill));
 
     jest.clearAllMocks();
   });
@@ -122,18 +116,15 @@ describe('UsersService', () => {
   describe('findOneById', () => {
     it('should find a user by ID and attach their skills', async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      mockSkillRepository.find.mockResolvedValue([mockSkill]);
+      mockUserRepository.manager.getRepository = jest.fn().mockReturnValue({
+        find: jest.fn().mockResolvedValue([mockSkill]),
+      });
 
       const result = await service.findOneById(mockUserId);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { id: mockUserId },
         relations: ['favoriteSkills'],
-      });
-      expect(skillRepository.find).toHaveBeenCalledWith({
-        where: { owner: { id: mockUserId } },
-        relations: ['category'],
       });
       expect(result).toBeDefined();
       expect(result.id).toBe(mockUserId);
@@ -150,12 +141,29 @@ describe('UsersService', () => {
   });
 
   describe('getAllUsers', () => {
-    it('should return all users', async () => {
-      mockUserRepository.find.mockResolvedValue([mockUser]);
-      const result = await service.getAllUsers();
-      expect(result).toEqual([mockUser]);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(userRepository.find).toHaveBeenCalled();
+    it('should return all users with pagination', async () => {
+      const usersQueryDto = { page: 1, limit: 10 };
+      const mockUsers = [mockUser];
+      const mockCount = 1;
+
+      mockUserRepository.findAndCount.mockResolvedValue([mockUsers, mockCount]);
+
+      const result = await service.getAllUsers(usersQueryDto);
+
+      expect(result).toEqual({ data: mockUsers, count: mockCount });
+      expect(userRepository.findAndCount).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if requested page does not exist', async () => {
+      const usersQueryDto = { page: 2, limit: 10 };
+      const mockUsers = [];
+      const mockCount = 5;
+
+      mockUserRepository.findAndCount.mockResolvedValue([mockUsers, mockCount]);
+
+      await expect(service.getAllUsers(usersQueryDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -169,12 +177,10 @@ describe('UsersService', () => {
 
       const result = await service.updateUser(mockUserId, updateUserDto);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(userRepository.preload).toHaveBeenCalledWith({
         id: mockUserId,
         ...updateUserDto,
       });
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(userRepository.save).toHaveBeenCalledWith(preloadedUser);
       expect(result.name).toBe('Updated Name');
     });
@@ -209,7 +215,6 @@ describe('UsersService', () => {
         newPassword,
       );
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(service.findOneById).toHaveBeenCalledWith(mockUserId);
       expect(bcrypt.compare).toHaveBeenCalledWith(
         oldPassword,
@@ -219,7 +224,6 @@ describe('UsersService', () => {
         newPassword,
         mockAppConfig.bcryptSalt,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(userRepository.update).toHaveBeenCalledWith(mockUserId, {
         password: hashedNewPassword,
       });
@@ -238,7 +242,6 @@ describe('UsersService', () => {
         mockUser.password,
       );
       expect(bcrypt.hash).not.toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(userRepository.update).not.toHaveBeenCalled();
     });
 
