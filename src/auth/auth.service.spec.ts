@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { User } from '@/entities/user.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { jwtConfig } from '@/config/jwt.config';
-import { appConfig } from '@/config/app.config';
+import { AppConfig, appConfig } from '@/config/app.config';
 import { IAppConfig, IJwtConfig } from '@/config/types';
 import { Gender } from '@/enums/gender.enum';
 import { UserRole } from '@/enums/roles.enum';
@@ -24,11 +24,12 @@ describe('AuthService', () => {
     refreshExpiresIn: '7d',
   };
 
-  const mockAppConfig: IAppConfig = {
+  const mockAppConfig: AppConfig = {
     port: 3000,
     bcryptSalt: 10,
     env: 'test',
     host: 'localhost',
+    corsOrigin: 'http://localhost:3080',
   };
 
   beforeEach(async () => {
