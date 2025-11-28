@@ -12,8 +12,8 @@ import { CreateSkillDto } from '@/skills/dto/create-skill.dto';
 import { FindSkillsQueryDto } from '@/skills/dto/find-skills.dto';
 import { UpdateSkillDto } from '@/skills/dto/update-skill.dto';
 import { UUID } from 'crypto';
-import { Category } from '@/categories/entities/category.entity';
 import { testUsers } from '@/scripts/seed-users.data';
+import { Category } from '@/entities/category.entity';
 
 describe('Skills тесты (e2e)', () => {
   let app: INestApplication;

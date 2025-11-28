@@ -85,7 +85,7 @@ describe('Categories (e2e)', () => {
       const childCategory = await repo.save(
         repo.create({
           name: 'Child Category',
-          parentId: parentCategory.id,
+          parent: parentCategory,
         }),
       );
 

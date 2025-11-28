@@ -10,6 +10,7 @@ describe('SkillsService', () => {
   let service: SkillsService;
   let skillsRepository: any;
   let userRepository: any;
+  let categoryRepository;
   const skillId = '1';
   const anotherSkillId = '2';
   const noneExistingSkillId = '-1';
@@ -38,12 +39,19 @@ describe('SkillsService', () => {
             findOne: jest.fn(),
           },
         },
+        {
+          provide: 'CategoryRepository',
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<SkillsService>(SkillsService);
     skillsRepository = module.get('SkillRepository');
     userRepository = module.get('UserRepository');
+    categoryRepository = module.get('CategoryRepository');
   });
 
   describe('create', () => {
@@ -81,7 +89,7 @@ describe('SkillsService', () => {
 
       expect(skillsRepository.findOne).toHaveBeenCalledWith({
         where: { id: skillId },
-        relations: ['owner'],
+        relations: ['owner', 'category'],
       });
       expect(result).toEqual({ id: skillId, title: 'Test Skill' });
     });
@@ -153,18 +161,24 @@ describe('SkillsService', () => {
         ...skill,
         ...updates,
       }));
-
+      categoryRepository.findOne = jest
+        .fn()
+        .mockResolvedValue({ id: updateSkillDto.category });
       const result = await service.update(skillId, updateSkillDto, userId);
 
       expect(skillsRepository.findOne).toHaveBeenCalledWith({
         where: { id: skillId },
-        relations: ['owner'],
+        relations: ['owner', 'category'],
       });
-      expect(skillsRepository.merge).toHaveBeenCalledWith(existingSkill, {
-        title: updateSkillDto.title,
-        description: updateSkillDto.description,
-        images: updateSkillDto.images,
-      });
+      expect(skillsRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...existingSkill,
+          title: updateSkillDto.title,
+          description: updateSkillDto.description,
+          images: updateSkillDto.images,
+          category: { id: updateSkillDto.category },
+        }),
+      );
       expect(skillsRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           ...existingSkill,
@@ -211,7 +225,7 @@ describe('SkillsService', () => {
 
       expect(skillsRepository.findOne).toHaveBeenCalledWith({
         where: { id: skillId },
-        relations: ['owner'],
+        relations: ['owner', 'category'],
       });
       expect(skillsRepository.remove).toHaveBeenCalledWith(existingSkill);
     });

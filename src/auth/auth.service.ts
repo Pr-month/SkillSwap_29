@@ -46,9 +46,12 @@ export class AuthService {
       this.appConfig.bcryptSalt,
     );
 
-    const categoryToLearn = await this.userRepository.manager.findOne(Category, {
-      where: { id: dto.wantToLearn },
-    });
+    const categoryToLearn = await this.userRepository.manager.findOne(
+      Category,
+      {
+        where: { id: dto.wantToLearn },
+      },
+    );
 
     if (!categoryToLearn) {
       throw new BadRequestException('Категория для изучения не найдена');
@@ -84,7 +87,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    return {user:user,...tokens};
+    return { user: user, ...tokens };
   }
 
   async login(dto: LoginDto) {
@@ -103,7 +106,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    return {user:user,...tokens};
+    return { user: user, ...tokens };
   }
 
   async logout(userId: UUID) {

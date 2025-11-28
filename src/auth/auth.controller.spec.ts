@@ -89,6 +89,7 @@ describe('AuthController', () => {
         email: 'test@example.com',
         password: 'password123',
         name: 'Test User',
+        wantToLearn: '123e4567-e89b-12d3-a456-426614174000',
       };
       const registerSpy = jest
         .spyOn(authService, 'register')

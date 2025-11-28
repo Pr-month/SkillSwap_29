@@ -1,3 +1,4 @@
+import { Category } from '@/entities/category.entity';
 import { AppDataSource } from '../config/db.config';
 import { Skill } from '../entities/skill.entity';
 import { User } from '../entities/user.entity';
@@ -8,7 +9,7 @@ async function fixUserSkills() {
   AppDataSource.setOptions({ logging: false });
   const skillRepo = AppDataSource.getRepository(Skill);
   const userRepo = AppDataSource.getRepository(User);
-
+  const categoryRepo = AppDataSource.getRepository(Category);
   try {
     console.log('🔄 Начинаем исправление связей навыков пользователей...');
 
@@ -30,6 +31,8 @@ async function fixUserSkills() {
       relations: ['owner'],
     });
 
+    const categorys = await categoryRepo.find();
+
     if (skills.length === 0) {
       console.log('❌ Навыки не найдены');
       return;
@@ -45,18 +48,17 @@ async function fixUserSkills() {
       );
 
       // Случайные навыки, которые пользователь хочет изучать (не созданные им)
-      const wantToLearnSkills = skills
-        .filter((skill) => skill.owner.id !== user.id)
+      const wantToLearnCategory = categorys
         .sort(() => 0.5 - Math.random())
         .slice(0, 3); // Выбираем до 3 случайных навыков
 
       console.log(`\n👤 Пользователь: ${user.name}`);
       console.log(`   Может научить: ${canTeachSkills.length} навыков`);
-      console.log(`   Хочет научиться: ${wantToLearnSkills.length} навыков`);
+      console.log(`   Хочет научиться: ${wantToLearnCategory.length} навыков`);
 
       // Обновляем связи пользователя
       user.skills = canTeachSkills;
-      user.wantToLearn = wantToLearnSkills;
+      user.wantToLearn = wantToLearnCategory;
 
       await userRepo.save(user);
       console.log(`✅ Обновлены связи для пользователя ${user.name}`);

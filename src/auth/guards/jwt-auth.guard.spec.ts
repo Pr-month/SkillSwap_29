@@ -20,13 +20,14 @@ describe('JwtAuthGuard', () => {
     jest.clearAllMocks();
   });
 
-  const createMockContext = (authHeader?: string) => ({
-    switchToHttp: () => ({
-      getRequest: () => ({
-        headers: { authorization: authHeader },
+  const createMockContext = (authHeader?: string) =>
+    ({
+      switchToHttp: () => ({
+        getRequest: () => ({
+          headers: { authorization: authHeader },
+        }),
       }),
-    }),
-  }) as any;
+    }) as any;
 
   it('Выбрасывает UnauthorizedException если заголовок Authorization отсутствует.', async () => {
     const context = createMockContext(undefined);
@@ -43,7 +44,9 @@ describe('JwtAuthGuard', () => {
   });
 
   it('Выбрасывает UnauthorizedException при неверном токене.', async () => {
-    (jwtService.verifyAsync as jest.Mock).mockRejectedValue(new Error('Invalid token'));
+    (jwtService.verifyAsync as jest.Mock).mockRejectedValue(
+      new Error('Invalid token'),
+    );
 
     const context = createMockContext('Bearer invalidToken');
     await expect(guard.canActivate(context)).rejects.toThrow(

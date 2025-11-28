@@ -1,17 +1,21 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { Test } from '@nestjs/testing';
-import { DataSource } from 'typeorm';
 import * as request from 'supertest';
 import type { App } from 'supertest/types';
+import { DataSource } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 import { AppModule } from '@/app.module';
-import { UsersQueryDto } from '@/users/dto/users-query.dto';
-import { testUsers } from '@/scripts/seed-users.data';
-import { UUID } from 'crypto';
-import { UpdateUserDto } from '@/users/dto/update-user.dto';
 import { PasswordDto } from '@/auth/dto/password.dto';
+import { User } from '@/entities/user.entity';
+import { Gender, UserRole } from '@/enums';
+import { testUsers } from '@/scripts/seed-users.data';
 import { FindSkillsQueryDto } from '@/skills/dto/find-skills.dto';
+import { UpdateUserDto } from '@/users/dto/update-user.dto';
+import { UUID } from 'crypto';
+import { Skill } from '@/entities/skill.entity';
+import { CreateSkillDto } from '@/skills/dto/create-skill.dto';
 
 describe('Users (e2e)', () => {
   let app: INestApplication;
@@ -20,7 +24,6 @@ describe('Users (e2e)', () => {
   let userEmail: string;
   let server: any;
   let token: any;
-  let loginResponse: any;
   let userPassword: string;
 
   beforeAll(async () => {
@@ -40,49 +43,84 @@ describe('Users (e2e)', () => {
     await app.init();
 
     dataSource = app.get(DataSource);
-    await dataSource.runMigrations();
+
+    // Очищаем базу перед запуском тестов
+    await dataSource.dropDatabase();
+    await dataSource.synchronize();
 
     server = app.getHttpServer() as unknown as App;
 
-    userEmail = testUsers[0].email;
-    userPassword = testUsers[0].password;
+    // Создаем тестового пользователя с правильным хешированием пароля
+    const userRepo = dataSource.getRepository(User);
+    userEmail = 'test@example.com';
+    userPassword = 'password123';
 
-    loginResponse = await request(server)
+    const hashedPassword = await bcrypt.hash(userPassword, 10);
+
+    const testUser = userRepo.create({
+      name: 'Test User',
+      email: userEmail,
+      password: hashedPassword,
+      gender: Gender.UNKNOWN,
+      role: UserRole.USER,
+    });
+
+    await userRepo.save(testUser);
+    userId = testUser.id;
+
+    // Логинимся
+    const loginResponse = await request(server)
       .post('/auth/login')
-      .send({ email: userEmail, password: userPassword })
-      .expect(200);
+      .send({ email: userEmail, password: userPassword });
+
+    if (loginResponse.status !== 200) {
+      throw new Error(`Login failed: ${JSON.stringify(loginResponse.body)}`);
+    }
 
     token = loginResponse.body.accessToken;
-    userId = loginResponse.body.user.id;
   });
 
   afterAll(async () => {
+    await dataSource.dropDatabase();
     await app.close();
+  });
+
+  beforeEach(async () => {
+    // Очищаем связанные таблицы перед каждым тестом если нужно
+  });
+
+  afterEach(async () => {
+    // Дополнительная очистка если нужна
   });
 
   it('GET /users -> [] | [user]', async () => {
     const repo = dataSource.getRepository(User);
+
+    // Создаем дополнительного пользователя для теста
     const user = repo.create({
-      name: 'Test User',
-      email: 'test@example.com',
-      password: 'hashed',
+      name: 'Second Test User',
+      email: 'test2@example.com',
+      password: await bcrypt.hash('hashed', 10),
       gender: Gender.UNKNOWN,
       role: UserRole.USER,
     });
     await repo.save(user);
 
-    const server = app.getHttpServer() as unknown as App;
-    const res = await request(server).get('/users');
-    if (res.status !== 200) {
-      throw new Error(`GET /users failed: ${JSON.stringify(res.body)}`);
-    }
+    const res = await request(server)
+      .get('/users')
+      .set('Authorization', `Bearer ${token}`); // Добавляем авторизацию
+
+    expect(res.status).toBe(200);
+
     const body = res.body as {
       data: Array<{ id: string; email: string }>;
       count: number;
     };
+
     expect(Array.isArray(body.data)).toBe(true);
-    expect(body.data).toHaveLength(1);
-    expect(body.data[0]?.email).toBe('test@example.com');
+    expect(body.data.length).toBeGreaterThan(0);
+    // Проверяем что наш пользователь есть в списке
+    expect(body.data.some((u) => u.email === 'test2@example.com')).toBe(true);
   });
 
   it('GET /users/:id -> user', async () => {
@@ -91,20 +129,20 @@ describe('Users (e2e)', () => {
       repo.create({
         name: 'User 2',
         email: 'user2@example.com',
-        password: 'hashed',
+        password: await bcrypt.hash('hashed', 10),
         gender: Gender.UNKNOWN,
         role: UserRole.USER,
       }),
     );
 
-    const server = app.getHttpServer() as unknown as App;
-    const res = await request(server).get(`/users/${String(created.id)}`);
-    if (res.status !== 200) {
-      throw new Error(`GET /users/:id failed: ${JSON.stringify(res.body)}`);
-    }
+    const res = await request(server)
+      .get(`/users/${String(created.id)}`)
+      .set('Authorization', `Bearer ${token}`); // Добавляем авторизацию
+
+    expect(res.status).toBe(200);
     const body = res.body as { id: string; email: string };
-    expect(body.id).toBe(userId as unknown as string);
-    expect(body.email).toBe(userEmail);
+    expect(body.id).toBe(created.id);
+    expect(body.email).toBe('user2@example.com');
   });
 
   it('обновление данных пользователя', async () => {
@@ -124,8 +162,8 @@ describe('Users (e2e)', () => {
 
   it('обновление пароля', async () => {
     const updatePasswordDto: PasswordDto = {
-      currentPassword: userPassword,
-      newPassword: 'user12345',
+      currentPassword: userPassword, // Используем оригинальный пароль
+      newPassword: 'user12345@',
     };
 
     const res = await request(server)
@@ -133,21 +171,38 @@ describe('Users (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .send(updatePasswordDto)
       .expect(200);
-
     expect(res.body.message).toEqual('Пароль успешно обновлен');
+
+    // Обновляем пароль для последующих тестов
+    userPassword = updatePasswordDto.newPassword;
   });
 
   it('поиск пользователя по навыку', async () => {
+    // Сначала создаем тестовые данные для навыков
+    const skillsRepo = dataSource.getRepository(Skill);
+
+    // Создаем тестовый навык
+    const createSkillDto: CreateSkillDto = {
+      title: 'test',
+      category: 'test',
+      images: [],
+    };
+    const skillResponse: Skill = await request(server)
+      .post('/skills')
+      .set('Authorization', `Bearer ${token}`)
+      .send(createSkillDto)
+      .then((res) => res.body);
+
     const query: FindSkillsQueryDto = {
       page: 1,
       limit: 20,
     };
 
-    const resSkills = await request(server).get('/skills').query(query);
-    const skillId = resSkills.body.data[0].id;
-
     const res = await request(server)
-      .get(`/users/by-skill/${skillId}`)
+      .get(`/users/by-skill/${skillResponse.id}`)
+      .set('Authorization', `Bearer ${token}`) // Добавляем авторизацию
       .expect(200);
+
+    expect(Array.isArray(res.body)).toBe(true);
   });
 });

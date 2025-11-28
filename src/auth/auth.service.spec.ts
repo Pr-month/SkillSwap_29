@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { BadRequestException, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 import { AuthService } from './auth.service';
@@ -10,8 +14,8 @@ import { jwtConfig } from '@/config/jwt.config';
 import { AppConfig, appConfig } from '@/config/app.config';
 import { IJwtConfig } from '@/config/types';
 import { Gender } from '@/enums/gender.enum';
-import { UserRole } from '@/enums/roles.enum';
-import * as bcrypt from 'bcrypt';
+import { UserRole } from '@/enums';
+import { QueryFailedError } from 'typeorm';
 
 jest.mock('bcrypt');
 
@@ -35,12 +39,24 @@ describe('AuthService (unit)', () => {
     skills: [],
     favoriteSkills: [],
   };
-
+  const mockUserRepo = {
+    create: jest.fn(),
+    save: jest.fn(),
+    findOne: jest.fn(),
+    update: jest.fn(),
+    manager: {
+      findOne: jest.fn(),
+    },
+  };
   const mockJwtConfig: IJwtConfig = {
     accessSecret: 'access-secret',
     refreshSecret: 'refresh-secret',
     accessExpiresIn: '1h',
     refreshExpiresIn: '7d',
+  };
+
+  const mockJwtService = {
+    signAsync: jest.fn(),
   };
 
   const mockAppConfig: AppConfig = {
@@ -52,20 +68,22 @@ describe('AuthService (unit)', () => {
   };
 
   beforeEach(async () => {
-    const mockCategory = { 
-      id: '123e4567-e89b-12d3-a456-426614174000', 
-      name: 'JavaScript' 
+    const mockCategory = {
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'JavaScript',
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: getRepositoryToken(User), useValue: {
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
             ...mockUserRepo,
             manager: {
               findOne: jest.fn().mockResolvedValue(mockCategory),
             },
-          } 
+          },
         },
         { provide: JwtService, useValue: mockJwtService },
         { provide: jwtConfig.KEY, useValue: mockJwtConfig },
@@ -92,23 +110,32 @@ describe('AuthService (unit)', () => {
       }));
       mockUserRepo.save.mockImplementation(async (user) => user);
 
-      const dto = { email: 'new@example.com', password: '12345', name: 'New', wantToLearn: '123e4567-e89b-12d3-a456-426614174000', };
+      const dto = {
+        email: 'new@example.com',
+        password: '12345',
+        name: 'New',
+        wantToLearn: '123e4567-e89b-12d3-a456-426614174000',
+      };
       const result = await service.register(dto as any);
 
-      expect(result.email).toBe(dto.email);
-      expect(result).toHaveProperty('id', 'some-uuid');
+      expect(result.user.email).toBe(dto.email);
+      expect(result.user.id).toBe('some-uuid');
     });
 
     it('Выбрасывает ConflictException если email уже существует.', async () => {
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
-      mockUserRepo.create.mockImplementation((dto) => ({ ...dto } as any));
+      mockUserRepo.create.mockImplementation((dto) => ({ ...dto }) as any);
 
       const err = new QueryFailedError('sql', [], new Error('duplicate'));
       (err as any).code = '23505';
       mockUserRepo.save.mockRejectedValue(err);
 
       await expect(
-        service.register({ email: 'test@example.com', password: '123', name: 'T' } as any)
+        service.register({
+          email: 'test@example.com',
+          password: '123',
+          name: 'T',
+        } as any),
       ).rejects.toThrow(ConflictException);
     });
   });
@@ -118,17 +145,23 @@ describe('AuthService (unit)', () => {
       mockUserRepo.findOne.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-      const result = await service.login({ email: mockUser.email, password: '12345' } as any);
+      const result = await service.login({
+        email: mockUser.email,
+        password: '12345',
+      } as any);
 
-      expect(result).toHaveProperty('email', mockUser.email);
-      expect(result).toHaveProperty('id', mockUser.id);
+      expect(result).toHaveProperty('user.email', mockUser.email);
+      expect(result).toHaveProperty('user.id', mockUser.id);
     });
 
     it('Выбрасывает UnauthorizedException если пользователь не найден.', async () => {
       mockUserRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.login({ email: 'unknown@example.com', password: '12345' } as any),
+        service.login({
+          email: 'unknown@example.com',
+          password: '12345',
+        } as any),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -140,18 +173,23 @@ describe('AuthService (unit)', () => {
         service.login({ email: mockUser.email, password: 'wrong' } as any),
       ).rejects.toThrow(UnauthorizedException);
     });
-
   });
 
   describe('refreshTokens', () => {
     it('Успешно обновляет токены при валидном refreshToken.', async () => {
-      mockUserRepo.findOne.mockResolvedValue({ ...mockUser, refreshToken: 'storedHash' });
+      mockUserRepo.findOne.mockResolvedValue({
+        ...mockUser,
+        refreshToken: 'storedHash',
+      });
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       mockJwtService.signAsync.mockResolvedValueOnce('accessToken');
       mockJwtService.signAsync.mockResolvedValueOnce('refreshToken');
       jest.spyOn(service, 'updateRefreshToken').mockResolvedValue(undefined);
 
-      const result = await service.refreshTokens(mockUser.id as any, 'refreshToken');
+      const result = await service.refreshTokens(
+        mockUser.id as any,
+        'refreshToken',
+      );
 
       expect(result).toHaveProperty('accessToken', 'accessToken');
       expect(result).toHaveProperty('refreshToken', 'refreshToken');
@@ -174,13 +212,19 @@ describe('AuthService (unit)', () => {
 
       await service.logout(mockUser.id as any);
 
-      expect(mockUserRepo.findOne).toHaveBeenCalledWith({ where: { id: mockUser.id } });
-      expect(mockUserRepo.save).toHaveBeenCalledWith(expect.objectContaining({ refreshToken: '' }));
+      expect(mockUserRepo.findOne).toHaveBeenCalledWith({
+        where: { id: mockUser.id },
+      });
+      expect(mockUserRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ refreshToken: '' }),
+      );
     });
 
     it('Выбрасывает BadRequestException если пользователь не найден.', async () => {
       mockUserRepo.findOne.mockResolvedValue(null);
-      await expect(service.logout('bad-id' as any)).rejects.toThrow(BadRequestException);
+      await expect(service.logout('bad-id' as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

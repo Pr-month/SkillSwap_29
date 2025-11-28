@@ -104,19 +104,25 @@ export class SkillsService {
       throw new ForbiddenException('Вы можете обновлять только свои навыки');
     }
 
+    // Если категория передана — получаем её заранее
+    let category: Category | null = null;
+
+    if (updateSkillDto.category !== undefined) {
+      category = await this.categoryRepository.findOne({
+        where: { id: updateSkillDto.category },
+      });
+
+      if (!category) {
+        throw new NotFoundException('Категория не найдена');
+      }
+    }
+
     const updatedSkill = this.skillsRepository.merge(skill, {
       title: updateSkillDto.title,
       description: updateSkillDto.description,
       images: updateSkillDto.images,
+      ...(category && { category }),
     });
-
-    if (updateSkillDto.category !== undefined) {
-      const category = await this.categoryRepository.findOne({
-        where: { id: updateSkillDto.category },
-      });
-
-      updatedSkill.category = category as Category;
-    }
 
     return await this.skillsRepository.save(updatedSkill);
   }
