@@ -31,14 +31,6 @@ export class Category {
   @MaxLength(100)
   name: string;
 
-  @Column({
-    type: 'uuid',
-    nullable: true,
-  })
-  @IsUUID()
-  @IsOptional()
-  parentId: string;
-
   @ApiProperty({
     description: 'Родительская категория',
     type: () => Category,

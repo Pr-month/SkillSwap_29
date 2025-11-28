@@ -11,20 +11,19 @@ import { UUID } from 'crypto';
 import { Skill } from '@/entities/skill.entity';
 import { User } from '@/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { IAppConfig } from '@/config/types';
 import { appConfig } from '@/config/app.config';
-import { SkillsService } from '@/skills/skills.service';
 import { UsersQueryDto } from './dto/users-query.dto';
+import { ConfigType } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @Inject(appConfig.KEY)
-    private readonly appConfig: IAppConfig,
     @InjectRepository(Skill)
-    private readonly skillsService: SkillsService,
+    private skillRepository: Repository<Skill>,
+    @Inject(appConfig.KEY)
+    private readonly config: ConfigType<typeof appConfig>,
   ) {}
 
   async findOneById(id: UUID): Promise<User> {
@@ -52,12 +51,13 @@ export class UsersService {
   async getAllUsers(
     query: UsersQueryDto,
   ): Promise<{ data: User[]; count: number }> {
-    const { page, limit } = query;
+    const { page = 1, limit = 10 } = query;
     const offset = (page - 1) * limit;
 
     const options: FindManyOptions<User> = {
       take: limit,
       skip: offset,
+      relations: ['skills', 'wantToLearn'],
     };
 
     const [data, count] = await this.userRepository.findAndCount(options);
@@ -91,7 +91,7 @@ export class UsersService {
     if (isMatch) {
       const hashedNewPassword = await bcrypt.hash(
         newPassword,
-        this.appConfig.bcryptSalt,
+        this.config.bcryptSalt,
       );
       await this.userRepository.update(id, { password: hashedNewPassword });
       return { message: 'Пароль успешно обновлен' };
@@ -101,26 +101,29 @@ export class UsersService {
   }
 
   async getUsersBySkillCategory(skillId: string): Promise<User[]> {
-    // Получаем навык по ID
-    const skill = await this.skillsService.findById(skillId);
+    // Получаем навык по ID вместе с категорией
+    const skill = await this.skillRepository.findOne({
+      where: { id: skillId },
+      relations: ['category'], // Важно: загружаем связанную категорию
+    });
 
     if (!skill) {
-      throw new Error('Навык не найден');
+      throw new NotFoundException('Навык не найден');
     }
 
     // Получаем категорию навыка
     const category = skill.category;
 
     if (!category) {
-      throw new Error('Категория навыка не найдена');
+      throw new NotFoundException('Категория навыка не найдена');
     }
 
-    // Ищем пользователей, у которых эта категория в wantToLearn
     return await this.userRepository
       .createQueryBuilder('user')
-      .leftJoin('user.wantToLearn', 'wantToLearnSkill')
-      .leftJoin('wantToLearnSkill.category', 'category')
-      .where('category.id = :categoryId', { categoryId: category.id })
+      .leftJoinAndSelect('user.wantToLearn', 'wantToLearnCategory')
+      .where('wantToLearnCategory.id = :categoryId', {
+        categoryId: category.id,
+      })
       .take(10)
       .getMany();
   }

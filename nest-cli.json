@@ -3,6 +3,10 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "exclude": ["frontend/**/*"]
+  },
+  "watchOptions": {
+    "exclude": ["frontend/**/*"]
   }
 }

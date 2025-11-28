@@ -22,6 +22,7 @@ import { Skill } from './skill.entity';
 import { Gender } from '@/enums/gender.enum';
 import { UserRole } from '@/enums/roles.enum';
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
+import { Category } from './category.entity';
 
 @ApiExtraModels()
 @Entity({
@@ -171,14 +172,14 @@ export class User {
   skills: Skill[];
 
   @ApiProperty({
-    type: () => [Skill],
+    type: () => [Category],
     description: 'Навыки, которые пользователь хочет изучить',
     isArray: true,
     required: false,
   })
-  @ManyToMany(() => Skill)
+  @ManyToMany(() => Category)
   @JoinTable({ name: 'user_want_to_learn' })
-  wantToLearn?: Skill[];
+  wantToLearn?: Category[];
 
   @ApiProperty({
     type: () => [Skill],

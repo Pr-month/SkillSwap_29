@@ -1,30 +1,33 @@
 import {
+  BadRequestException,
   Controller,
   Post,
   UploadedFile,
   UseInterceptors,
-  HttpException,
-  HttpStatus,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { FilesService } from './files.service';
 import { FilesInterceptor } from './files.interceptor';
+import { ApiUploadFile } from './files.swagger';
 
+@ApiTags('Файлы')
 @Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Post()
   @UseInterceptors(FilesInterceptor)
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  @ApiUploadFile()
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      throw new HttpException(
+      throw new BadRequestException(
         'Файл не указан или недопустимый тип файла',
-        HttpStatus.BAD_REQUEST,
       );
     }
 
+    this.filesService.validateFile(file);
     const publicUrl = this.filesService.getPublicFileUrl(file.filename);
-    //Здесь можно добавить сохранение ссылки в БД
+
     return { url: publicUrl };
   }
 }

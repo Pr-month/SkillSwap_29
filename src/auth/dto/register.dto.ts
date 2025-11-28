@@ -7,6 +7,7 @@ import {
   IsEnum,
   MaxLength,
   IsDateString,
+  IsUUID,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Gender } from '@/enums/gender.enum';
@@ -60,4 +61,8 @@ export class RegisterDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsUUID('4', { message: 'Некорректный ID категории' })
+  wantToLearn: string;
 }

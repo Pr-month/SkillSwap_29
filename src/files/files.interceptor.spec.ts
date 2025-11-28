@@ -1,23 +1,25 @@
+import { Test } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
 import { FilesInterceptor } from './files.interceptor';
-import { ConfigService } from '@nestjs/config';
-import { IFileConfig } from '../config/types';
+import { fileConfig } from '@/config/file.config';
 
 describe('FilesInterceptor', () => {
-  const mockFileConfig: IFileConfig = {
-    fileSize: 1024 * 1024 * 2, //2MB
-    allowedMimeTypes: ['image/jpeg', 'image/png'],
-  };
+  let interceptor: FilesInterceptor;
 
-  const mockConfigService = {
-    get: jest.fn().mockImplementation((key: string) => {
-      if (key === 'FILE_CONFIG') {
-        return mockFileConfig;
-      }
-      return null;
-    }),
-  } as unknown as ConfigService;
+  beforeEach(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [
+        await ConfigModule.forRoot({
+          load: [fileConfig],
+        }),
+      ],
+      providers: [FilesInterceptor],
+    }).compile();
+
+    interceptor = moduleRef.get<FilesInterceptor>(FilesInterceptor);
+  });
 
   it('should be defined', () => {
-    expect(new FilesInterceptor(mockConfigService)).toBeDefined();
+    expect(interceptor).toBeDefined();
   });
 });
